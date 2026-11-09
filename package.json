@@ -1,0 +1,83 @@
+{
+  "name": "pilketum-bcc-2026",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Frontend Pemilihan Ketua Umum BCC 2026: voter web, admin panel, public display.",
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "dev:mock": "cross-env NEXT_PUBLIC_API_MOCKING=enabled next dev",
+    "build": "cross-env NEXT_PUBLIC_API_MOCKING=disabled next build",
+    "build:standalone": "cross-env NEXT_PUBLIC_API_MOCKING=disabled NEXT_OUTPUT=standalone next build",
+    "build:mock": "cross-env NEXT_PUBLIC_API_MOCKING=enabled next build",
+    "start": "next start",
+    "lint": "eslint src tests scripts *.config.ts *.config.mjs vitest.setup.ts --max-warnings 0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "tokens": "tsx scripts/build-tokens.ts",
+    "check:bundle": "node scripts/check-bundle.mjs",
+    "lhci": "lhci autorun && lhci autorun --collect.settings.preset=desktop",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mjs,js}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{css,md,json,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^7.0.3",
+    "@tanstack/react-query": "^5.107.1",
+    "next": "16.4.5",
+    "radix-ui": "^1.8.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-hook-form": "^7.91.0",
+    "vaul": "^1.1.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@lhci/cli": "^0.16.0",
+    "@playwright/test": "~1.65.0",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "husky": "^9.1.7",
+    "jsdom": "^31.0.0",
+    "lint-staged": "^17.6.0",
+    "msw": "^3.0.4",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}
