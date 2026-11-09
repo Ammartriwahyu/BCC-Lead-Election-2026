@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mock-build",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["start", "--port", "4330"],
+      "port": 4330
+    },
+    {
+      "name": "dev-mock",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:mock", "--port", "4340"],
+      "port": 4340
+    }
+  ]
+}
