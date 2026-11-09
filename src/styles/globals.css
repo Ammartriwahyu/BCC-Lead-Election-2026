@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Breakpoints from the spec: sm 390, md 768, lg 1024, xl 1280, 2xl 1512. */
+@theme {
+  --breakpoint-sm: 390px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1512px;
+
+  --animate-spin: spin 1s linear infinite;
+  --animate-fade-in: fade-in 200ms ease-out;
+  --animate-sheet-in: sheet-in 240ms ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Horizontal page padding: Figma 16 (mobile 390) → 100 (desktop 1512). */
+@utility page-gutter {
+  padding-inline: var(--space-16);
+  @variant md {
+    padding-inline: var(--space-40);
+  }
+  @variant xl {
+    padding-inline: var(--space-64);
+  }
+  @variant 2xl {
+    padding-inline: var(--space-100);
+  }
+}
+
+/* Space under scroll content so the fixed mobile action bar (85 px + safe area) never covers it. */
+@utility pb-mobile-action-bar {
+  padding-bottom: calc(85px + var(--space-24) + env(safe-area-inset-bottom));
+  @variant md {
+    padding-bottom: 0;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg-page);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Visible 2px focus ring. Dark surfaces (navy) opt into a light ring with data-surface="dark". */
+  :focus-visible {
+    outline: 2px solid var(--color-action-primary);
+    outline-offset: 2px;
+  }
+
+  [data-surface='dark'] :focus-visible {
+    outline-color: var(--color-text-on-dark);
+  }
+
+  /* White cards placed on navy (sign-in card, status cards) switch back to the brand ring. */
+  [data-surface='light'] :focus-visible {
+    outline-color: var(--color-action-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
