@@ -26,20 +26,11 @@ export const content = {
     copyrightShort: '© 2026 Basic Computing Community',
     organizer: 'Organized by the BCC Election Committee',
   },
-  adminNav: {
-    label: 'Committee menu', // NEW: aria-label of the sidebar nav
-    overview: 'Overview',
-    voters: 'Voter list',
-    results: 'Results',
-    resultsLocked: 'locked until voting closes', // NEW: screen-reader text for the lock icon
-    signOut: 'Sign out',
-    openMenu: 'Open menu', // NEW: drawer toggle below 1024 px
-    closeMenu: 'Close menu', // NEW
-    breadcrumbRoot: 'Election',
-    breadcrumbLabel: 'Breadcrumb', // NEW
-  },
   dialog: {
     close: 'Close', // NEW: accessible name, never visible
+  },
+  toast: {
+    region: 'Notifications', // NEW: accessible name of the toast list
   },
   offline: {
     banner: "You're offline. Your vote will not be sent until you're back online.", // NEW
@@ -58,28 +49,6 @@ export const content = {
       closed: 'Voting has closed.',
       reopened: 'Voting is open again. You can now pick a candidate.',
     },
-  },
-  signIn: {
-    title: 'BCC Chairperson Election 2026',
-    intro:
-      'Sign in with your BCC member account to vote. You get one vote, and nobody can see who you picked.',
-    cardTitle: 'Sign in',
-    cardSubtitle: 'Use the email you registered with BCC.',
-    email: 'Email',
-    emailPlaceholder: 'name@student.ub.ac.id',
-    password: 'Password',
-    passwordPlaceholder: 'Enter your password',
-    submit: 'Sign in',
-    errors: {
-      invalidCredentials: "That email and password don't match. Check them and try again.",
-      notAVoter: "This email isn't on the voter register.",
-      emailRequired: 'Enter your email.', // NEW
-      emailInvalid: 'Enter a valid email address.', // NEW
-      passwordRequired: 'Enter your password.', // NEW
-      network: "We couldn't reach the server. Check your connection and try again.", // NEW
-      unknown: 'Something went wrong. Try again, or ask the committee for help.', // NEW
-    },
-    sessionExpired: 'Your session ended. Sign in again to continue.', // NEW
   },
   candidates: {
     heroOpen: {

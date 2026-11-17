@@ -8,16 +8,17 @@ import { CloseIcon } from '@/components/icons/CloseIcon';
 import { LockIcon } from '@/components/icons/LockIcon';
 import { LogoutIcon } from '@/components/icons/LogoutIcon';
 import { PeopleIcon } from '@/components/icons/PeopleIcon';
+import { PeopleSpeakIcon } from '@/components/icons/PeopleSpeakIcon';
 import { PieChartIcon } from '@/components/icons/PieChartIcon';
 import { TrophyIcon } from '@/components/icons/TrophyIcon';
 import type { IconProps } from '@/components/icons/types';
 import { ROUTES } from '@/config/constants';
-import { content } from '@/content/copy';
+import { adminNavCopy } from '@/content/adminCopy';
 import { cx } from '@/lib/utils/cx';
 
 import { Logo } from './Logo';
 
-export type AdminSection = 'overview' | 'voters' | 'results';
+export type AdminSection = 'overview' | 'candidates' | 'voters' | 'results';
 
 interface AdminSidebarProps {
   active: AdminSection;
@@ -39,7 +40,7 @@ function NavItem({
   trailing,
   onSelect,
 }: {
-  href: (typeof ROUTES)['adminOverview' | 'adminVoters' | 'adminResults'];
+  href: (typeof ROUTES)['adminOverview' | 'adminCandidates' | 'adminVoters' | 'adminResults'];
   icon: ComponentType<IconProps>;
   label: string;
   active: boolean;
@@ -84,30 +85,36 @@ function SidebarBody({
         <div className="px-10 pt-10 pb-24">
           <Logo size="sidebar" />
         </div>
-        <nav aria-label={content.adminNav.label} className="flex flex-col gap-12">
+        <nav aria-label={adminNavCopy.label} className="flex flex-col gap-12">
           <NavItem
             href={ROUTES.adminOverview}
             icon={PieChartIcon}
-            label={content.adminNav.overview}
+            label={adminNavCopy.overview}
             active={active === 'overview'}
+          />
+          <NavItem
+            href={ROUTES.adminCandidates}
+            icon={PeopleSpeakIcon}
+            label={adminNavCopy.candidates}
+            active={active === 'candidates'}
           />
           <NavItem
             href={ROUTES.adminVoters}
             icon={PeopleIcon}
-            label={content.adminNav.voters}
+            label={adminNavCopy.voters}
             active={active === 'voters'}
           />
           <NavItem
             href={ROUTES.adminResults}
             icon={TrophyIcon}
-            label={content.adminNav.results}
+            label={adminNavCopy.results}
             active={active === 'results'}
             onSelect={resultsLocked ? onResultsLocked : undefined}
             trailing={
               resultsLocked ? (
                 <>
                   <LockIcon size={20} className="text-slate-200" />
-                  <span className="sr-only">, {content.adminNav.resultsLocked}</span>
+                  <span className="sr-only">, {adminNavCopy.resultsLocked}</span>
                 </>
               ) : null
             }
@@ -124,7 +131,7 @@ function SidebarBody({
           aria-busy={signingOut || undefined}
         >
           <LogoutIcon size={24} />
-          <span>{content.adminNav.signOut}</span>
+          <span>{adminNavCopy.signOut}</span>
         </button>
       </div>
     </div>
@@ -153,7 +160,7 @@ export function AdminSidebar(props: AdminSidebarProps) {
         <Logo size="mobile" />
         <RadixDialog.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
           <RadixDialog.Trigger className="flex size-44 items-center justify-center rounded-md text-text-on-dark">
-            <span className="sr-only">{content.adminNav.openMenu}</span>
+            <span className="sr-only">{adminNavCopy.openMenu}</span>
             <span aria-hidden="true" className="flex w-24 flex-col gap-4">
               <span className="h-2 bg-current" />
               <span className="h-2 bg-current" />
@@ -167,9 +174,9 @@ export function AdminSidebar(props: AdminSidebarProps) {
               data-surface="dark"
               className="fixed inset-y-0 left-0 z-50 w-263 bg-bg-sidebar outline-none"
             >
-              <RadixDialog.Title className="sr-only">{content.adminNav.label}</RadixDialog.Title>
+              <RadixDialog.Title className="sr-only">{adminNavCopy.label}</RadixDialog.Title>
               <RadixDialog.Close className="absolute top-12 right-12 flex size-44 items-center justify-center rounded-md text-text-on-dark">
-                <span className="sr-only">{content.adminNav.closeMenu}</span>
+                <span className="sr-only">{adminNavCopy.closeMenu}</span>
                 <CloseIcon />
               </RadixDialog.Close>
               <SidebarBody

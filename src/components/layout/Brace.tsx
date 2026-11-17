@@ -19,19 +19,24 @@ interface BraceProps {
   /** Rendered width in px; height follows the sticker's aspect ratio. */
   width: number;
   className?: string;
-  priority?: boolean;
+  /**
+   * Load at once (above the fold). Deliberately not `priority`: most screens render a mobile and a
+   * desktop Brace and hide one with CSS, and a preload for the hidden one is wasted (and warned about).
+   */
+  eager?: boolean;
 }
 
-export function Brace({ pose, width, className, priority = false }: BraceProps) {
+export function Brace({ pose, width, className, eager = false }: BraceProps) {
   const image = POSES[pose];
   return (
     <Image
       src={image}
       alt=""
       aria-hidden="true"
+      data-brace={pose}
       width={width}
       height={Math.round((width * image.height) / image.width)}
-      priority={priority}
+      loading={eager ? 'eager' : 'lazy'}
       className={cx('pointer-events-none shrink-0 select-none', className)}
     />
   );

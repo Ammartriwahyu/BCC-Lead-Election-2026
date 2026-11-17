@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/Badge';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
+import { MeterBar } from '@/components/ui/MeterBar';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { SearchField } from '@/components/ui/SearchField';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -100,6 +101,14 @@ export function GalleryClient() {
         />
       </Section>
 
+      <Section title="Meter bars">
+        <div className="flex w-456 flex-col gap-16">
+          <MeterBar ratio={0.8} size="lg" />
+          <MeterBar ratio={0.55} />
+          <MeterBar ratio={0.3} tone="soft" />
+        </div>
+      </Section>
+
       <Section title="Fields">
         <div className="flex w-456 flex-col gap-20">
           <TextField label="Email" required placeholder="committee@bcc.ub.ac.id" />
@@ -175,7 +184,7 @@ export function GalleryClient() {
             onSignOut={() => undefined}
           />
           <div className="w-760 p-40">
-            <AdminTopbar page="Overview" accountName="Election Committee" />
+            <AdminTopbar trail={['Overview']} accountName="Election Committee" />
           </div>
         </div>
       </Section>

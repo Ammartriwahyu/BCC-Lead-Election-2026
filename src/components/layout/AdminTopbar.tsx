@@ -1,8 +1,8 @@
-import { content } from '@/content/copy';
+import { adminNavCopy } from '@/content/adminCopy';
 
 interface AdminTopbarProps {
-  /** Current page, shown after "Election /". */
-  page: string;
+  /** Pages after "Election /", the last one is the current page ("Candidates", "Add"). */
+  trail: readonly string[];
   accountName: string;
 }
 
@@ -17,14 +17,18 @@ export function initialsOf(name: string): string {
 }
 
 /** Figma "Pilketum / Admin topbar" (37:914): breadcrumb left, committee account right. */
-export function AdminTopbar({ page, accountName }: AdminTopbarProps) {
+export function AdminTopbar({ trail, accountName }: AdminTopbarProps) {
   return (
     <div className="flex w-full items-center justify-between gap-16">
-      <nav aria-label={content.adminNav.breadcrumbLabel}>
+      <nav aria-label={adminNavCopy.breadcrumbLabel}>
         <ol className="flex items-center gap-4 text-body-2-medium text-text-secondary">
-          <li>{content.adminNav.breadcrumbRoot}</li>
-          <li aria-hidden="true">/</li>
-          <li aria-current="page">{page}</li>
+          <li>{adminNavCopy.breadcrumbRoot}</li>
+          {trail.map((item, index) => (
+            <li key={item} className="flex items-center gap-4">
+              <span aria-hidden="true">/</span>
+              <span aria-current={index === trail.length - 1 ? 'page' : undefined}>{item}</span>
+            </li>
+          ))}
         </ol>
       </nav>
       <div className="flex items-center gap-12">

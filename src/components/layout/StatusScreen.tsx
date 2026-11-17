@@ -32,12 +32,12 @@ export function StatusScreen({
   const Heading = headingLevel === 1 ? 'h1' : 'h2';
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-16 py-32 md:px-40 md:py-48">
-      <Brace pose={pose} width={150} priority className="md:hidden" />
+      <Brace pose={pose} width={150} eager className="md:hidden" />
       <div
         data-surface="light"
         className="flex w-full flex-col gap-12 rounded-xl bg-surface-card px-20 py-24 shadow-card md:w-760 md:max-w-full md:flex-row md:items-center md:gap-40 md:py-40 md:pr-48 md:pl-40"
       >
-        <Brace pose={pose} width={200} priority className="hidden md:block" />
+        <Brace pose={pose} width={200} eager className="hidden md:block" />
         <div className="flex min-w-0 flex-1 flex-col gap-12 md:gap-16">
           <Heading className="text-heading-5 text-text-primary md:text-heading-4">{title}</Heading>
           <div className="text-body-2 text-text-secondary md:text-body-1">{body}</div>

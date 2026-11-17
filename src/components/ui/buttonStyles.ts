@@ -8,9 +8,11 @@ import { cx } from '@/lib/utils/cx';
  * - dark:      Selected, committee Sign in (semantic/action/primary-dark)
  * - on-dark:   Sign out, Select this candidate (white on navy)
  * - outline-on-dark: Back to candidates (slate/300 border on navy)
+ * - danger-outline: Delete candidate (A8, red/700 outline)
  * Hover/pressed for primary and secondary follow the Figma variants; the others are NEW (DEVIATIONS).
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'dark' | 'on-dark' | 'outline-on-dark';
+export type ButtonVariant =
+  'primary' | 'secondary' | 'dark' | 'on-dark' | 'outline-on-dark' | 'danger-outline';
 
 const base =
   'inline-flex min-h-48 items-center justify-center gap-8 rounded-lg px-20 py-12 text-body-1-medium whitespace-nowrap transition-colors select-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed';
@@ -25,6 +27,8 @@ const variants: Record<ButtonVariant, string> = {
     'bg-action-secondary text-primary-800 hover:bg-primary-50 active:bg-primary-100 disabled:bg-neutral-200',
   'outline-on-dark':
     'border border-slate-300 text-text-on-dark hover:bg-primary-700 active:bg-primary-900',
+  'danger-outline':
+    'border border-red-700 bg-action-secondary text-red-700 hover:bg-red-50 active:bg-red-100 disabled:border-neutral-200 disabled:text-text-secondary',
 };
 
 export function buttonClassName(

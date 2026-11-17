@@ -12,6 +12,18 @@
   --animate-spin: spin 1s linear infinite;
   --animate-fade-in: fade-in 200ms ease-out;
   --animate-sheet-in: sheet-in 240ms ease-out;
+  /* Display screen change: 400 ms cross-fade (DISPLAY.fadeMs). */
+  --animate-screen-in: fade-in 400ms ease-out both;
+  --animate-screen-out: fade-out 400ms ease-in both;
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
 
   @keyframes fade-in {
     from {
@@ -46,9 +58,14 @@
   }
 }
 
-/* Space under scroll content so the fixed mobile action bar (85 px + safe area) never covers it. */
+/*
+ * Space under scroll content so the fixed mobile action bar never covers it. The bar publishes
+ * its real height (it grows when a long name wraps); 85 px + safe area is the Figma height.
+ */
 @utility pb-mobile-action-bar {
-  padding-bottom: calc(85px + var(--space-24) + env(safe-area-inset-bottom));
+  padding-bottom: calc(
+    var(--mobile-action-bar-height, calc(85px + env(safe-area-inset-bottom))) + var(--space-24)
+  );
   @variant md {
     padding-bottom: 0;
   }
