@@ -17,6 +17,9 @@ const EXPECTED_NETWORK_NOISE = [
   // WebKit notice: COOP is sent without COEP, so SharedArrayBuffer is off. The app does not use it,
   // and COEP `require-corp` would block candidate photos from the backend's host.
   /not cross-origin isolated/i,
+  // Firefox notice when Next adds the font preload again on a client-side navigation: the font is
+  // already loaded, so the new preload is "not used". Not an application error.
+  /preloaded with link preload was not used within a few seconds/i,
 ];
 
 function describe(message: ConsoleMessage): string {

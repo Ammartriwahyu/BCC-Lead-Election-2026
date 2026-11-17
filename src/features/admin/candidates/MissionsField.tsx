@@ -35,7 +35,7 @@ export function MissionsField({ control, register, errors }: MissionsFieldProps)
   const invalid = Boolean(errors.missions);
 
   return (
-    <fieldset className="flex flex-col gap-12" aria-describedby="missions-intro">
+    <fieldset className="flex min-w-0 flex-col gap-12" aria-describedby="missions-intro">
       <legend className="contents">
         <span
           className={cx('text-body-1-semibold', invalid ? 'text-red-700' : 'text-text-primary')}
@@ -58,7 +58,7 @@ export function MissionsField({ control, register, errors }: MissionsFieldProps)
                 <span aria-hidden="true" className="w-16 text-body-1-semibold text-text-brand">
                   {index + 1}.
                 </span>
-                <div className={cx(inputBoxClassName(Boolean(message)), 'flex-1')}>
+                <div className={cx(inputBoxClassName(Boolean(message)), 'min-w-0 flex-1')}>
                   <input
                     type="text"
                     aria-label={copy.missionLabel(index + 1)}
