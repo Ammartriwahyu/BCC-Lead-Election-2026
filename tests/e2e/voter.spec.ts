@@ -2,13 +2,15 @@
  * Voter flows (spec §4.1–4.3). Runs on desktop Chrome, Pixel 7 and iPhone 14.
  * The mock database is shared, so every test starts by applying a scenario.
  */
-import { expect, test } from '@playwright/test';
-
-import { ACCOUNTS, applyScenario, getMockState } from './helpers';
+import { expect, test } from '../fixtures';
+import { ACCOUNTS, applyScenario, DEMO_OTP_CODE, getMockState } from './helpers';
 import { committee, reviewButton, signIn, submitVoteButton } from './voter-helpers';
 
 test.describe('happy path', () => {
-  test('sign in, pick, review, submit, then booth auto sign-out', async ({ page, request }) => {
+  test('sign in, pick, review, submit, then booth auto sign-out @cross-browser', async ({
+    page,
+    request,
+  }) => {
     await applyScenario(request, 'open');
     await signIn(page);
     await expect(page).toHaveURL(/\/candidates$/);
@@ -39,7 +41,7 @@ test.describe('happy path', () => {
     ).toBeVisible();
     await expect(page.getByTestId('auto-sign-out')).toContainText(/Signing you out in \d+s/);
 
-    // Booth mode: back at sign-in after 10 s, and Back does not reveal the voter's pages.
+    // Booth mode: back at sign-in after 3 s, and Back does not reveal the voter's pages.
     await expect(page).toHaveURL(/\/sign-in\?reason=signed-out$/, { timeout: 15_000 });
     await page.goBack();
     await expect(page).not.toHaveURL(/\/(candidates|vote|already-voted|closed)/);
@@ -62,7 +64,7 @@ test.describe('happy path', () => {
     await applyScenario(request, 'open');
     await signIn(page);
     await page.getByRole('link', { name: 'Vision & mission of Candidate Name 02' }).click();
-    await expect(page).toHaveURL(/\/candidates\/cand-02$/);
+    await expect(page).toHaveURL(/\/candidates\/2$/);
     await expect(page.getByRole('heading', { level: 2, name: 'Vision' })).toBeVisible();
     await page
       .getByRole('button', { name: 'Select this candidate' })
@@ -84,23 +86,53 @@ test.describe('happy path', () => {
 test.describe('sign-in errors', () => {
   test('wrong password: banner, password cleared, focus on password', async ({ page, request }) => {
     await applyScenario(request, 'open');
-    await signIn(page, { email: ACCOUNTS.voter.email, password: 'wrong-password' });
+    await signIn(page, { username: ACCOUNTS.voter.username, password: 'wrong-password' });
     // Next's route announcer is also role="alert", so target ours by its text.
     await expect(
-      page.getByRole('alert').filter({ hasText: "That email and password don't match" }),
+      page.getByRole('alert').filter({ hasText: "That NIM or email and password don't match" }),
     ).toBeVisible();
     const password = page.getByLabel(/^Password/).first();
     await expect(password).toHaveValue('');
     await expect(password).toBeFocused();
   });
 
-  test('not a voter: error on the email field', async ({ page, request }) => {
+  test('not on the register: error on the account field', async ({ page, request }) => {
     await applyScenario(request, 'open');
     await signIn(page, ACCOUNTS.guest);
-    const email = page.getByRole('textbox', { name: 'Email' });
-    await expect(email).toHaveAccessibleDescription("This email isn't on the voter register.");
-    await expect(email).toBeFocused();
-    await expect(email).toHaveAttribute('aria-invalid', 'true');
+    const account = page.getByRole('textbox', { name: 'NIM or UB email' });
+    await expect(account).toHaveAccessibleDescription("This account isn't on the voter register.");
+    await expect(account).toBeFocused();
+    await expect(account).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('UB SSO not responding: banner, nothing else changes', async ({ page, request }) => {
+    await applyScenario(request, 'open');
+    await signIn(page, ACCOUNTS.ssoDown);
+    await expect(
+      page.getByRole('alert').filter({ hasText: "UB sign-in isn't responding right now" }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/sign-in$/);
+  });
+
+  test('signs in with a NIM, and with a code for two-step verification', async ({
+    page,
+    request,
+  }) => {
+    await applyScenario(request, 'open');
+    await signIn(page, ACCOUNTS.voterNim);
+    await expect(page).toHaveURL(/\/candidates$/);
+    await page.context().clearCookies();
+
+    await signIn(page, ACCOUNTS.otp);
+    await expect(page.getByRole('heading', { name: 'Enter your verification code' })).toBeVisible();
+    const code = page.getByRole('textbox', { name: /Verification code/ });
+    await expect(code).toBeFocused();
+    await code.fill('000000');
+    await page.getByRole('button', { name: 'Verify' }).click();
+    await expect(code).toHaveAccessibleDescription("That code isn't right. Try again.");
+    await code.fill(DEMO_OTP_CODE);
+    await page.getByRole('button', { name: 'Verify' }).click();
+    await expect(page).toHaveURL(/\/candidates$/);
   });
 
   test('already voted goes to "You\'ve already voted"', async ({ page, request }) => {
@@ -112,10 +144,10 @@ test.describe('sign-in errors', () => {
 
   test('deep link resumes after sign-in when valid', async ({ page, request }) => {
     await applyScenario(request, 'open');
-    await page.goto('/candidates/cand-03');
-    await expect(page).toHaveURL(/\/sign-in\?next=%2Fcandidates%2Fcand-03$/);
+    await page.goto('/candidates/3');
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fcandidates%2F3$/);
     await signIn(page);
-    await expect(page).toHaveURL(/\/candidates\/cand-03$/);
+    await expect(page).toHaveURL(/\/candidates\/3$/);
   });
 });
 
@@ -171,15 +203,12 @@ test.describe('state changes without reload', () => {
 });
 
 test.describe('submit failures', () => {
-  test('failed submit -> Try again resends with the same Idempotency-Key', async ({
-    page,
-    request,
-  }) => {
+  test('failed submit -> Try again checks has_voted, then resends', async ({ page, request }) => {
     await applyScenario(request, 'submit-fails');
-    const keys: string[] = [];
+    const calls: string[] = [];
     page.on('request', (req) => {
-      if (req.url().endsWith('/api/votes') && req.method() === 'POST')
-        keys.push(req.headers()['idempotency-key'] ?? '');
+      const path = new URL(req.url()).pathname;
+      if (path === '/api/votes' || path === '/api/me') calls.push(`${req.method()} ${path}`);
     });
     await signIn(page);
     await page.getByRole('button', { name: 'Select Candidate Name 02' }).click();
@@ -190,9 +219,10 @@ test.describe('submit failures', () => {
 
     await page.getByRole('button', { name: 'Try again' }).click();
     await expect(page).toHaveURL(/\/vote\/submitted$/);
-    expect(keys).toHaveLength(2);
-    expect(keys[0]).toBeTruthy();
-    expect(keys[1]).toBe(keys[0]);
+    const votes = calls.filter((c) => c === 'POST /api/votes');
+    expect(votes).toHaveLength(2);
+    // The status check runs between the two attempts.
+    expect(calls.lastIndexOf('GET /api/me')).toBeGreaterThan(calls.indexOf('POST /api/votes'));
     expect((await getMockState(request)).votesReceived).toBe(2);
   });
 
