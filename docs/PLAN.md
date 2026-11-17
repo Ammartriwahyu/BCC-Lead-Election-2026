@@ -28,6 +28,51 @@
 | 2026-11-09 | 3    | Lighthouse CI sementara hanya `/sign-in` (mobile + desktop); admin dan display ditambahkan di Fase 4–5                                                                                                                                      | Halaman lain belum ada / butuh login                                                                       |
 | 2026-11-09 | 3    | Tes komponen memakai mock `next/navigation` global (`src/test/navigation.ts`) dan helper `renderWithProviders`                                                                                                                              | Menguji alur nyata (MSW node + cookie jar) tanpa server Next                                               |
 
+| 2026-11-16 | 4 | `GET /admin/overview` gets `candidateCount` | A1 shows a "Candidates" card and the committee session cannot call `GET /candidates` |
+| 2026-11-16 | 4 | Candidate totals (`/admin/results`) are requested only while the state is `CLOSED` and removed from the query cache when it is not (hook `useAdminResults`); Overview uses them only for the Final results thumbnail | Privacy rule: totals never fetched or shown before voting closes, also after a reopen |
+| 2026-11-16 | 4 | Display control reads `display` from the polled `/admin/overview` on both pages; "Show on display" is optimistic with rollback and sends `expectedVersion` | One source for the row state; a second committee member's change shows up within one poll |
+| 2026-11-16 | 4 | Confirm buttons guard with a ref, not only `isPending` | E2E found that a double click sent two requests before the first re-render |
+| 2026-11-16 | 4 | `SessionExpiryListener` takes `signInRoute`; the committee sign-in form clears the "session ending" flag when it mounts | Reuse for the panel. Without the reset, Back after sign-out restored the shell and stayed on a spinner |
+| 2026-11-16 | 4 | Voter search: URL is the state (`?q=&page=`), typing uses `router.replace` after 300 ms, paging uses `router.push` | Reload and Back keep the list position; no history entry per keystroke |
+| 2026-11-16 | 4 | Admin e2e and visual specs run on desktop Chrome only (1024 / 1280 / 1512) | Admin is desktop only; requested for this phase |
+| 2026-11-16 | 4 | Lighthouse CI also checks `/admin/sign-in`; signed-in admin pages are covered by axe in Playwright | LHCI has no login step |
+| 2026-11-16 | 5 | `WINNER_REVEAL` payload gets `candidates: [{ number }]` | D6 labels the hidden cards "Candidate 01…"; numbers only, nothing that hints at the result |
+| 2026-11-16 | 5 | Live data in a framework-agnostic controller (`displayFeed.ts`) instead of TanStack Query: stream, polling fallback, backoff, stream retry, "reconnecting" timer | One place for the transport rules, testable with fake timers; TanStack Query has no SSE |
+| 2026-11-16 | 5 | `openEventStream` lives in `lib/api/client.ts`, `subscribeDisplay` in `endpoints.ts` | Keeps "only `lib/api` talks to the network"; stream events use the same Zod schema as `GET /display` |
+| 2026-11-16 | 5 | Mock SSE route (`/api/display/stream`) streams from the Next server and checks the database every 500 ms | Tests the stream path end to end against the shared mock database |
+| 2026-11-16 | 5 | Mock `resetDb` keeps election and display versions increasing | An open `/display` ignores older versions; a reset must behave like a real backend |
+| 2026-11-16 | 5 | Display scale via `useSyncExternalStore` (window size); stage hidden until sized | No layout jump; CSS cannot compute a unitless scale from the viewport |
+| 2026-11-16 | 5 | Display e2e and visual specs run on desktop Chrome only (1920×1080, 1366×768, 1280×800, 1024×1024) | The display is a laptop + videotron page |
+| 2026-11-16 | 5 | Lighthouse CI also checks `/display` | Public page; the open SSE connection does not block the audit (99–100 desktop) |
+| 2026-11-17 | 6 | JS budget measured by `scripts/measure-js.mjs` (Brotli, quality 11). "Framework" = scripts of the 404 page; `nomodule` polyfills skipped; signed-in pages measured with placeholder session cookies (the proxy only checks presence). CI gate `pnpm check:js` after `pnpm build` | Makes the 9 Nov decision checkable; the old gzip script counted the polyfill bundle modern browsers never download |
+| 2026-11-17 | 6 | Client schemas on `zod/mini` (functional API); `lib/api/errors.ts` no longer imports schemas (`errorResponse.ts` does) | −7 KB Brotli, and Zod leaves the shared baseline (root providers only need `isApiError`) |
+| 2026-11-17 | 6 | `content/copy.ts` split: `adminCopy.ts`, `displayCopy.ts` | Voter pages no longer ship admin and display strings (≈ 3 KB) |
+| 2026-11-17 | 6 | Own toast list instead of Radix Toast (live region, 6 s, pause on hover) | ≈ 17 KB Brotli on every admin page; no swipe or F8 needed for two messages |
+| 2026-11-17 | 6 | Vaul bottom sheet loaded with `next/dynamic` (mobile only) | −8 KB on desktop `/candidates`; on phones it loads while the list renders, before it can be opened |
+| 2026-11-17 | 6 | Mutations `gcTime: 0` (`QUERY.mutationGcMs`) | Load test found every previous voter's sign-in page kept alive for 5 min by finished mutations (+375 DOM nodes per voter on a booth) |
+| 2026-11-17 | 6 | Images hidden at a breakpoint load `eager`, not `priority` | Preloads for hidden duplicates (mobile/desktop logos, Brace, A0 photo below 1024) were unused and logged browser warnings |
+| 2026-11-17 | 6 | Shared Playwright fixture fails a test on any console error/warning or uncaught exception (browser network noise for failures a test causes on purpose is allowed) | Spec §10: no console errors or warnings |
+| 2026-11-17 | 6 | Cross-browser projects (Edge, Firefox, desktop WebKit) run the `@cross-browser` tests; CI skips Edge (not on Ubuntu) | Spec §10 browsers; full suite on every browser would triple the run |
+| 2026-11-17 | 6 | Lighthouse mobile gates the voter page (`/sign-in`); desktop gates `/sign-in`, `/admin/sign-in`, `/display` | Admin and display are desktop-only (spec §6). `/display` paints after its live payload arrives; mobile 86–90 is reported in QA_REPORT, not gated |
+| 2026-11-17 | 6 | Cross-role test: the booth and display run in separate WebKit instances on WebKit, separate contexts elsewhere | WebKit stalls automation of several pages in one instance; three real Edge instances made the run flaky on a laptop |
+| 2026-11-17 | 6 | Test server `next start --keepAliveTimeout 70000` | Random `ECONNRESET` when Playwright reused a socket Node was closing after 5 s |
+| 2026-11-17 | 7 | Endpoint registry `lib/api/contract.ts` (method, path, auth, schemas, status, error codes); `endpoints.ts` and the mock handlers read it; unit test checks every entry has a mock handler | One place to edit when the backend contract arrives; mock and client cannot drift |
+| 2026-11-17 | 7 | `docs/openapi.json` generated from the registry (`pnpm contract:openapi`, `--check` in CI), not hand-written | The backend team gets a diffable spec that always matches the code |
+| 2026-11-17 | 7 | Read-only live check `pnpm contract:check <apiBaseUrl>` (`lib/api/contractCheck.ts`), optional test accounts from env | Proves a staging backend against the same schemas before switching; no writes so it is safe on shared staging |
+| 2026-11-17 | 7 | ESLint boundary: outside `lib/api` only `endpoints`, `types`, `errors` (and `zodConfig`) may be imported | Wire format and HTTP stay swappable; `onUnauthorized` and `EventStreamHandle` re-exported from endpoints |
+| 2026-11-17 | 7 | Session cookie names from runtime env (`SESSION_COOKIE_VOTER` / `_ADMIN`, defaults unchanged); candidate photo hosts from build env `IMAGE_REMOTE_PATTERNS` | Backend names and photo hosts are unknown; no code change needed once they are |
+| 2026-11-17 | 7 | A build without `API_BASE_URL` answers `/api/*` with `503` and an explicit message (was `404 NOT_FOUND`) | `API_BASE_URL` is read at build time (rewrites are compiled in); the old 404 looked like a missing endpoint |
+| 2026-11-17 | 8 | Backend doc "API Pilketum BCC" adopted: contract, schemas (snake_case) and mappers rewritten; the mock backend implements the doc (Bearer tokens, OTP, candidates CRUD, export) | Integration: only `lib/api`, `lib/bff`, mocks and the new screens changed; components keep the domain types |
+| 2026-11-17 | 8 | BFF (`src/lib/bff`): the Next server keeps the backend's Bearer token in httpOnly cookies and forwards `/api/*` (route handler instead of a rewrite); `API_BASE_URL` is read at runtime | Decision by the committee: the spec forbids tokens in browser storage and booth devices are shared. No CORS, CSP stays `connect-src 'self'`, SSE works with cookies. Cost: per-IP limits need `X-Forwarded-For` (BACKEND_QUESTIONS #1) |
+| 2026-11-17 | 8 | Committee Candidates (A6–A8), OTP sign-in step, results export, "NIM or UB email" label | Decision by the committee; A6–A8 are new Figma frames (150:3971 …), the rest is NEW UI (DEVIATIONS #71–83) |
+| 2026-11-17 | 8 | Vote retry checks `GET /me has_voted` before resending; `VOTING_NOT_OPEN` refetches the status to choose /closed or stay | The API has no idempotency key and one code for not-open / closed |
+| 2026-11-17 | 8 | Display feed: no version; a poll answer that started before the latest stream event is dropped | The API sends no version; the stream is always at least as new |
+| 2026-11-17 | 8 | JS budget kept: `lib/api/routes.ts` (method + path, no schemas) for the browser, each call imports only its schema; endpoint summaries in `contractDocs.ts`; copy split into `signInCopy.ts` and `candidatesCopy.ts`; the election dialog and the candidate form load lazily | The new endpoints and screens took admin pages to 206 KB and the form to 221 KB; now ≤ 199.8 KB everywhere |
+| 2026-11-17 | 8 | Candidate photos use `getImageProps` + plain `<img>` (`components/ui/CandidateImage.tsx`) instead of `<Image>` | With real photos every `<Image>` on the ballot stayed in memory after the voter left (≈ 3 DOM nodes per voter in the booth load test); still resized by the image optimizer |
+| 2026-11-17 | 8 | Booth auto sign-out after the vote (V5) and on "already voted" (V5b): 10 s → 3 s (`BOOTH.autoSignOutSeconds`) | Committee request: the booth is free for the next voter sooner. The voter can still press Sign out at once |
+| 2026-11-17 | 8 | Open voting needs exactly 3 complete candidates (backend), not "at least 2" (spec 4.4); form limits use the stricter spec values (name 80, mission 160) | Backend is authoritative for opening; asked in BACKEND_QUESTIONS #5–6 |
+| 2026-11-17 | 6 | Load and endurance specs in `tests/load` (3 booths × 139 voters; one booth × 20 voters memory; display 4 h on a fake clock) | Spec §10 "Beban & ketahanan"; Chromium DevTools metrics |
+
 ## Context
 
 BCC butuh sistem e-voting untuk Pemilihan Ketua Umum 2026 (±139 pemilih, 3 bilik suara dengan perangkat bersama, voting dan pengumuman di hari yang sama, state dikendalikan manual oleh panitia). Repo `BCC-Lead-Election-2026` masih kosong (belum ada commit). Backend dibuat di repo terpisah dan belum ada, jadi frontend dibangun di atas **mock API** yang bisa diganti ke backend asli cukup dengan mengubah `lib/api` dan `mocks`.
@@ -60,7 +105,7 @@ Sumber kebenaran visual: Figma `8cCLCY4AJ7Xm3st7Dzy8iz`, section **Pilketum – 
 | `/sign-in`                                                    | V0a–d / MV0a–d                                           | Status strip mengikuti state. `?next=` divalidasi terhadap state.                                |
 | `/candidates`                                                 | V1, V2, Selected, O Confirm, O Submitting / MV1, MV2, MO | Mode Locked (NOT_STARTED) ↔ memilih (OPEN) tanpa reload. Dialog (desktop) / Vaul sheet (mobile). |
 | `/candidates/[id]`                                            | V1 V&M, V3 / MV1 V&M, MV3                                | 404 BCC bila id tidak valid.                                                                     |
-| `/vote/submitted`, `/vote/error`, `/already-voted`, `/closed` | V5, V4, V5b, V6 / MV5, MV4, MV5b, MV6                    | Auto sign-out 10 dtk di submitted & already-voted (mode bilik).                                  |
+| `/vote/submitted`, `/vote/error`, `/already-voted`, `/closed` | V5, V4, V5b, V6 / MV5, MV4, MV5b, MV6                    | Auto sign-out 3 dtk di submitted & already-voted (mode bilik).                                   |
 | `/admin/sign-in`                                              | A0                                                       | Foto login panitia dari Figma.                                                                   |
 | `/admin`                                                      | A1, A2, A3 + O Open/Close/Reopen                         | Turnout live (poll ≤5 dtk).                                                                      |
 | `/admin/voters?q=&page=`                                      | A5 × 3 state (+ last page, no results)                   | Debounce 300 ms, paginasi server.                                                                |
@@ -98,7 +143,7 @@ Kode error: `INVALID_CREDENTIALS, NOT_A_VOTER, ALREADY_VOTED, VOTING_NOT_OPEN, V
 - Scenario switcher: `?scenario=not-started|open|closed|already-voted|submit-fails|closed-mid-vote|reopen` + panel kecil, hanya dirender saat `API_MOCKING=enabled` dan di-load lewat dynamic import. Tombol **Reset demo data**.
 - Idempotency di mock: map `Idempotency-Key → response` agar retry tidak membuat suara ganda.
 - Fixture tambahan untuk QA: 1 kandidat, 6 kandidat, nama sangat panjang, 0 suara, seri, 139 dan 1.000 pemilih.
-- Penjaga produksi: route mock mengembalikan 404 bila `API_MOCKING` tidak aktif, dan CI memeriksa bahwa `.next/static` tidak mengandung `bcc.test` atau kode scenario switcher.
+- Penjaga produksi: route mock mengembalikan 503 (pesan "build tanpa API_BASE_URL") bila `API_MOCKING` tidak aktif, dan CI memeriksa bahwa `.next/static` tidak mengandung `bcc.test` atau kode scenario switcher.
 
 ## Keputusan desain yang akan dicatat di DEVIATIONS
 
@@ -112,14 +157,15 @@ Auto sign-out countdown (V5/V5b), dialog idle "Still there?", banner offline, 40
 3. **Voter flow** desktop + mobile, termasuk semua edge case 4.2 dan mode bilik 4.3.
 4. **Admin** — Overview × 3, dialog state + konflik, Voter list, Results, Display control (optimistic + rollback).
 5. **Display** — 6 layar, scale-to-fit, adapter SSE→polling 3 dtk, backoff, wake lock, F fullscreen, kursor tersembunyi, fade 400 ms.
-6. **Hardening & QA** — seluruh bagian 10, `docs/QA_REPORT.md`.
-7. **Integration readiness** — rapikan `lib/api` + `API_CONTRACT.md`, daftar pertanyaan untuk tim backend.
+6. **Hardening & QA** — seluruh bagian 10, `docs/QA_REPORT.md`. **Selesai 17 Nov 2026**; sisa uji manual tercantum di QA_REPORT §10.
+7. **Integration readiness** — rapikan `lib/api` + `API_CONTRACT.md`, daftar pertanyaan untuk tim backend. **Selesai 17 Nov 2026**: registry `lib/api/contract.ts`, `docs/openapi.json`, `pnpm contract:check`, `docs/INTEGRATION.md`, `docs/BACKEND_QUESTIONS.md`. Sisa: jawaban tim backend, lalu langkah di INTEGRATION.md.
+8. **Integrasi API backend** — dokumentasi "API Pilketum BCC" diterapkan lewat BFF; halaman Candidates (A6–A8), langkah OTP, export hasil. **Selesai 17 Nov 2026**; sisa: staging + akun uji, jawaban BACKEND_QUESTIONS #1–12.
 
 ## Risiko
 
 - Kompatibilitas tooling dengan TS 7 / ESLint 10 / Next 16 (mitigasi: cek Context7, turunkan versi bila perlu, catat alasannya).
 - MSW 3 `getResponse` di route handler: diverifikasi di awal Fase 1. Fallback: dispatcher kecil sendiri yang memakai handler yang sama.
-- **Anggaran JS awal ≤150 KB gzip tidak tercapai (Fase 3, build produksi):** `/sign-in` 263 KB gzip (230 KB brotli), halaman 404 kosong 232 KB gzip. Framework Next 16 + React 19 sendiri ±153 KB gzip; Zod + TanStack Query ±36 KB. Lighthouse tetap 100/100/100 (desktop) dan lolos mobile. Perlu keputusan: ukur anggaran untuk kode aplikasi saja (di luar framework), atau ganti ke `zod/mini` (±25 KB lebih kecil). **Keputusan (9 Nov 2026): dikerjakan di Fase 6** — anggaran baru: kode aplikasi ≤ 80 KB Brotli per halaman pemilih, total ≤ 200 KB Brotli, cek otomatis di CI, plus `zod/mini` di klien.
+- **Anggaran JS awal ≤150 KB gzip tidak tercapai (Fase 3, build produksi):** `/sign-in` 263 KB gzip (230 KB brotli), halaman 404 kosong 232 KB gzip. Framework Next 16 + React 19 sendiri ±153 KB gzip; Zod + TanStack Query ±36 KB. Lighthouse tetap 100/100/100 (desktop) dan lolos mobile. Perlu keputusan: ukur anggaran untuk kode aplikasi saja (di luar framework), atau ganti ke `zod/mini` (±25 KB lebih kecil). **Keputusan (9 Nov 2026): dikerjakan di Fase 6** — anggaran baru: kode aplikasi ≤ 80 KB Brotli per halaman pemilih, total ≤ 200 KB Brotli, cek otomatis di CI, plus `zod/mini` di klien. **Selesai (17 Nov 2026):** semua halaman lolos (app 35–59 KB, total 175–199.5 KB Brotli; lihat QA_REPORT). Halaman admin hanya 0,5 KB di bawah batas.
 - Uji VoiceOver/Safari/iOS dan uji ketahanan display 4 jam tidak bisa saya jalankan penuh dari Windows; akan saya otomasi semampunya (Playwright WebKit, run panjang dipercepat) dan tandai sisanya di QA_REPORT sebagai uji manual.
 - Ekspor token lengkap bergantung pada akses Figma MCP; jika ada token yang tidak terjangkau, saya laporkan sebelum menebak.
 
