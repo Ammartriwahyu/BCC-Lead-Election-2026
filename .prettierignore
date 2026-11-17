@@ -7,3 +7,4 @@ test-results
 public
 design/figma
 src/styles/tokens.css
+docs/openapi.json

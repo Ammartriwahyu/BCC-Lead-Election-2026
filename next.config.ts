@@ -1,7 +1,12 @@
 import type { NextConfig } from 'next';
 
-const isMocking = process.env.NEXT_PUBLIC_API_MOCKING === 'enabled';
-const apiBaseUrl = process.env.API_BASE_URL?.replace(/\/$/, '');
+// Hosts allowed for candidate photos (next/image), build time. Comma-separated URL patterns,
+// e.g. "https://cdn.example.org/photos/**". Empty: photos must be same-origin paths.
+const imageRemotePatterns = (process.env.IMAGE_REMOTE_PATTERNS ?? '')
+  .split(',')
+  .map((pattern) => pattern.trim())
+  .filter(Boolean)
+  .map((pattern) => new URL(pattern));
 
 // CSP is set per request in src/proxy.ts (it needs a nonce). Everything else is static.
 const securityHeaders = [
@@ -22,17 +27,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   typedRoutes: true,
+  ...(imageRemotePatterns.length > 0 ? { images: { remotePatterns: imageRemotePatterns } } : {}),
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
-  },
-  async rewrites() {
-    // Real backend: forward same-origin /api/* before the mock route handler is consulted.
-    if (isMocking || !apiBaseUrl) return { beforeFiles: [], afterFiles: [], fallback: [] };
-    return {
-      beforeFiles: [{ source: '/api/:path*', destination: `${apiBaseUrl}/:path*` }],
-      afterFiles: [],
-      fallback: [],
-    };
   },
 };
 
