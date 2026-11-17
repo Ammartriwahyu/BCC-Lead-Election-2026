@@ -4,14 +4,14 @@ import { Suspense } from 'react';
 import { Brace } from '@/components/layout/Brace';
 import { VoterNavbar } from '@/components/layout/VoterNavbar';
 import { VoterPageShell } from '@/components/layout/VoterPageShell';
-import { content } from '@/content/copy';
+import { signInCopy } from '@/content/signInCopy';
 import { SignInForm } from '@/features/auth/components/SignInForm';
 import { OfflineBanner } from '@/features/booth/components/OfflineBanner';
 import { ElectionStatusStrip } from '@/features/election/components/ElectionStatusStrip';
 
-export const metadata: Metadata = { title: content.signIn.cardTitle };
+export const metadata: Metadata = { title: signInCopy.cardTitle };
 
-const copy = content.signIn;
+const copy = signInCopy;
 
 /**
  * V0a–d (desktop 1512) / MV0a–d (390): intro with the live voting status strip and the sign-in card.
@@ -34,16 +34,11 @@ export default function SignInPage() {
             data-surface="light"
             className="relative mx-auto w-full max-w-520 rounded-xl bg-surface-card px-20 py-24 shadow-card md:p-32 lg:w-520"
           >
-            <Brace
-              pose="hello"
-              width={84}
-              priority
-              className="absolute -top-74 right-4 md:hidden"
-            />
+            <Brace pose="hello" width={84} eager className="absolute -top-74 right-4 md:hidden" />
             <Brace
               pose="hello"
               width={150}
-              priority
+              eager
               className="absolute -top-150 -right-24 hidden md:block"
             />
             <Suspense>

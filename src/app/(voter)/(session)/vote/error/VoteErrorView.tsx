@@ -16,8 +16,8 @@ import { useVoting } from '@/features/voting/VotingProvider';
 const copy = content.voteError;
 
 /**
- * V4 / MV4 · Vote not submitted (Brace "Woah"). "Try again" checks the voter's status first and
- * resends with the same Idempotency-Key, so a vote that did get stored is never counted twice.
+ * V4 / MV4 · Vote not submitted (Brace "Woah"). "Try again" checks the voter's status first
+ * (GET /me has_voted) and only resends when the vote was not stored, so it is never sent twice.
  */
 export function VoteErrorView() {
   const router = useRouter();

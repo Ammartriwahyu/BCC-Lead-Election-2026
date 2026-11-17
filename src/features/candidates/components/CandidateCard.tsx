@@ -17,6 +17,10 @@ interface CandidateCardProps {
   status: CandidateCardStatus;
   onToggle: () => void;
   onOpenDetails: () => void;
+  /** Committee form preview (A7/A8): same card, buttons shown but not usable. */
+  preview?: boolean;
+  /** Preview only: the details line while study program / year are not chosen yet. */
+  details?: string;
 }
 
 const copy = content.candidates;
@@ -26,13 +30,21 @@ const copy = content.candidates;
  * "… mobile" (78:3262, compact row) below. Locked = voting not open, no Select.
  * Selected: bg/subtle, 2px brand border; pressing "Selected" clears the pick.
  */
-export function CandidateCard({ candidate, status, onToggle, onOpenDetails }: CandidateCardProps) {
+export function CandidateCard({
+  candidate,
+  status,
+  onToggle,
+  onOpenDetails,
+  preview = false,
+  details,
+}: CandidateCardProps) {
   const selected = status === 'selected';
   return (
     <article
       aria-labelledby={`candidate-${candidate.id}-name`}
       data-testid="candidate-card"
       data-status={status}
+      inert={preview}
       className={cx(
         'flex flex-col gap-16 rounded-xl p-16 shadow-card md:pb-20',
         selected
@@ -58,7 +70,9 @@ export function CandidateCard({ candidate, status, onToggle, onOpenDetails }: Ca
           >
             {candidate.name}
           </h3>
-          <p className="text-body-2 text-text-secondary">{candidateDetails(candidate)}</p>
+          <p className="text-body-2 text-text-secondary">
+            {details ?? candidateDetails(candidate)}
+          </p>
         </div>
       </div>
       <div className="flex gap-12 *:min-w-0 *:flex-1">

@@ -11,79 +11,97 @@ import { Button } from '@/components/ui/Button';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { TextField } from '@/components/ui/TextField';
 import { publicEnv } from '@/config/env';
-import { content } from '@/content/copy';
+import { signInCopy } from '@/content/signInCopy';
 import { resolveNextPath } from '@/features/election/voterRouting';
 import { voterSignIn } from '@/lib/api/endpoints';
-import { hasErrorCode, isApiError } from '@/lib/api/errors';
+import { hasErrorCode } from '@/lib/api/errors';
+import type { OtpChallenge, VoterSession } from '@/lib/api/types';
 import { queryKeys } from '@/lib/query/keys';
 
 import { signInFormSchema, type SignInFormValues } from '../schemas';
 import { clearSessionEnding } from '../sessionEnding';
+import { OtpStep } from './OtpStep';
+import { signInBannerFor, signInBannerMessage, type SignInBanner } from './signInBanner';
 
-const copy = content.signIn;
-
-type Banner = 'invalid' | 'network' | 'unknown' | null;
-
-function bannerMessage(banner: Exclude<Banner, null>): string {
-  if (banner === 'invalid') return copy.errors.invalidCredentials;
-  if (banner === 'network') return copy.errors.network;
-  return copy.errors.unknown;
-}
+const copy = signInCopy;
 
 /**
- * Voter sign-in (V0a–d / MV0a–d). On failure the password is cleared, focus moves to the field
- * that needs fixing and the message is announced (spec §4.2).
+ * Voter sign-in (V0a–d / MV0a–d) through UB SSO: NIM or UB email plus password, then a code for
+ * accounts with two-step verification. On failure the password is cleared, focus moves to the
+ * field that needs fixing and the message is announced (spec §4.2).
  */
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [banner, setBanner] = useState<Banner>(null);
+  const [banner, setBanner] = useState<SignInBanner | null>(null);
+  const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
   const sessionExpired = searchParams.get('reason') === 'expired';
 
-  const form = useForm<SignInFormValues>({
-    resolver: zodResolver(signInFormSchema),
-    defaultValues: { email: '', password: '' },
-    shouldFocusError: true,
-  });
-  const { register, handleSubmit, setError, setFocus, setValue, formState } = form;
+  const { register, handleSubmit, setError, setFocus, setValue, formState } =
+    useForm<SignInFormValues>({
+      resolver: zodResolver(signInFormSchema),
+      defaultValues: { username: '', password: '' },
+      shouldFocusError: true,
+    });
+
+  const onSignedIn = (session: VoterSession) => {
+    clearSessionEnding();
+    queryClient.setQueryData(queryKeys.voter.me, session.voter);
+    queryClient.setQueryData(queryKeys.election, session.election);
+    const destination = resolveNextPath(searchParams.get('next'), {
+      status: session.voter.status,
+      state: session.election.state,
+    });
+    router.replace(destination);
+  };
 
   const mutation = useMutation({
-    mutationFn: (values: SignInFormValues) => voterSignIn(values.email, values.password),
-    onSuccess: (session) => {
-      clearSessionEnding();
-      queryClient.setQueryData(queryKeys.voter.me, session.voter);
-      queryClient.setQueryData(queryKeys.election, session.election);
-      const destination = resolveNextPath(searchParams.get('next'), {
-        status: session.voter.status,
-        state: session.election.state,
-      });
-      router.replace(destination);
+    mutationFn: (values: SignInFormValues) => voterSignIn(values.username, values.password),
+    onSuccess: (result) => {
+      setValue('password', '');
+      if (result.kind === 'otp') {
+        setChallenge(result.challenge);
+        return;
+      }
+      onSignedIn(result.session);
     },
     onError: (error) => {
       setValue('password', '');
       if (hasErrorCode(error, 'NOT_A_VOTER')) {
         setBanner(null);
         setError(
-          'email',
+          'username',
           { type: 'server', message: copy.errors.notAVoter },
           { shouldFocus: true },
         );
         return;
       }
-      if (hasErrorCode(error, 'INVALID_CREDENTIALS')) setBanner('invalid');
-      else if (isApiError(error) && error.isTransient) setBanner('network');
-      else setBanner('unknown');
+      setBanner(signInBannerFor(error));
       setFocus('password');
     },
   });
+
+  if (challenge) {
+    return (
+      <OtpStep
+        challenge={challenge}
+        onSignedIn={onSignedIn}
+        onRestart={(reason) => {
+          setChallenge(null);
+          mutation.reset();
+          setBanner(reason === 'expired' ? { kind: 'expired' } : null);
+        }}
+      />
+    );
+  }
 
   const onSubmit = handleSubmit((values) => {
     setBanner(null);
     mutation.mutate(values);
   });
 
-  const busy = mutation.isPending || mutation.isSuccess;
+  const busy = mutation.isPending || (mutation.isSuccess && mutation.data.kind === 'signed-in');
 
   return (
     <form
@@ -103,21 +121,20 @@ export function SignInForm() {
       ) : null}
       {banner ? (
         <Alert tone="danger" role="alert">
-          {bannerMessage(banner)}
+          {signInBannerMessage(banner)}
         </Alert>
       ) : null}
 
       <TextField
-        label={copy.email}
-        type="email"
-        inputMode="email"
+        label={copy.username}
+        type="text"
         required
-        placeholder={copy.emailPlaceholder}
-        autoComplete={publicEnv.boothMode ? 'off' : 'email'}
+        placeholder={copy.usernamePlaceholder}
+        autoComplete={publicEnv.boothMode ? 'off' : 'username'}
         autoCapitalize="none"
         spellCheck={false}
-        error={formState.errors.email?.message}
-        {...register('email')}
+        error={formState.errors.username?.message}
+        {...register('username')}
       />
       <PasswordField
         label={copy.password}
