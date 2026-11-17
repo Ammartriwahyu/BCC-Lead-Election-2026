@@ -1,8 +1,8 @@
 /** Client for the mock-only control endpoints (/api/__mock/*). Mock builds only. */
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 import { request } from '@/lib/api/client';
-import { electionDtoSchema } from '@/lib/api/schemas';
+import { electionStatusSchema } from '@/lib/api/schemas';
 
 import { type dataOptionsSchema, scenarioSchema, type ScenarioName } from './scenario-names';
 
@@ -10,7 +10,8 @@ const optionsSchema = z.object({ candidateSet: z.string(), voterCount: z.number(
 
 const mockStateSchema = z.object({
   options: optionsSchema,
-  election: electionDtoSchema,
+  status: electionStatusSchema,
+  displayScreen: z.string(),
   registeredVoters: z.number(),
   votesReceived: z.number(),
   voteRequests: z.number(),

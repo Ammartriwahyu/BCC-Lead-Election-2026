@@ -1,33 +1,51 @@
 /**
- * Domain models used by the app. DTOs (schemas.ts) are mapped to these once, in endpoints.ts.
+ * Domain models used by the app. DTOs (schemas.ts) are mapped to these once, in endpoints.ts,
+ * so a change in the backend's wire format stops at lib/api.
  */
-import type { z } from 'zod';
 
-import type {
-  displayScreenSchema,
-  electionActionSchema,
-  electionStateSchema,
-  errorCodeSchema,
-  voterStatusSchema,
-} from './schemas';
+export type ElectionState = 'NOT_STARTED' | 'OPEN' | 'CLOSED';
+export type VoterStatus = 'NOT_VOTED' | 'VOTED';
+export type DisplayScreen =
+  'OPENS_SOON' | 'VOTING_OPEN' | 'VOTING_CLOSED' | 'WINNER_REVEAL' | 'FINAL_RESULTS' | 'MOST_VOTES';
+export type ElectionAction = 'open' | 'close' | 'reopen';
 
-export type ElectionState = z.infer<typeof electionStateSchema>;
-export type VoterStatus = z.infer<typeof voterStatusSchema>;
-export type DisplayScreen = z.infer<typeof displayScreenSchema>;
-export type ElectionAction = z.infer<typeof electionActionSchema>;
-export type ErrorCode = z.infer<typeof errorCodeSchema>;
+/** Error codes the UI acts on. Backend codes are mapped to these in errorResponse.ts. */
+export type ErrorCode =
+  | 'INVALID_CREDENTIALS'
+  | 'NOT_A_VOTER'
+  | 'OTP_INVALID'
+  | 'OTP_EXPIRED'
+  | 'RATE_LIMITED'
+  | 'SSO_UNAVAILABLE'
+  | 'SSO_BUSY'
+  | 'ALREADY_VOTED'
+  | 'VOTING_NOT_OPEN'
+  | 'STATE_CONFLICT'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'RESULTS_LOCKED'
+  | 'CANDIDATES_LOCKED'
+  | 'CANDIDATES_INCOMPLETE'
+  | 'BALLOT_NUMBER_TAKEN'
+  | 'PHOTO_TOO_LARGE'
+  | 'PHOTO_INVALID'
+  | 'VALIDATION'
+  | 'NETWORK'
+  | 'TIMEOUT'
+  | 'UNKNOWN';
 
 export interface Election {
   state: ElectionState;
-  version: number;
-  updatedAt: Date;
 }
 
 export interface VoterMe {
+  /** NIM. */
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   status: VoterStatus;
+  /** Only known on this device right after submitting (the API sends no vote time). */
   submittedAt: Date | null;
 }
 
@@ -35,6 +53,20 @@ export interface VoterSession {
   voter: VoterMe;
   election: Election;
 }
+
+export interface OtpDevice {
+  id: string;
+  name: string;
+  isDefault: boolean;
+}
+
+export interface OtpChallenge {
+  flow: string;
+  devices: OtpDevice[];
+}
+
+export type SignInResult =
+  { kind: 'signed-in'; session: VoterSession } | { kind: 'otp'; challenge: OtpChallenge };
 
 export interface Candidate {
   id: string;
@@ -47,19 +79,27 @@ export interface Candidate {
   missions: string[];
 }
 
+/** What the committee form sends (create and update). */
+export interface CandidateInput {
+  number: number;
+  name: string;
+  major: string;
+  classYear: number;
+  vision: string;
+  missions: string[];
+}
+
 export interface VoteReceipt {
+  /** Device clock when the API confirmed the vote. */
   submittedAt: Date;
 }
 
 export interface AdminMe {
-  id: string;
-  name: string;
-  email: string;
+  username: string;
 }
 
 export interface DisplayControl {
   activeScreen: DisplayScreen;
-  version: number;
 }
 
 export interface Turnout {
@@ -73,13 +113,17 @@ export interface Turnout {
 export interface AdminOverview {
   election: Election;
   turnout: Turnout;
+  candidateCount: number;
   display: DisplayControl;
+  /** Voting has opened at least once: candidates and the register are locked for good. */
+  everOpened: boolean;
 }
 
 export interface AdminVoter {
+  /** NIM. */
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   status: VoterStatus;
 }
 
@@ -90,7 +134,6 @@ export interface AdminVotersPage {
   total: number;
   pageCount: number;
   turnout: Turnout;
-  election: Election;
 }
 
 export interface CandidateTally {
@@ -119,6 +162,8 @@ export interface AdminResults {
   turnout: Turnout;
   results: ResultsSummary;
   display: DisplayControl;
+  /** Ballots match the members who voted. false: results must not be announced. */
+  integrityOk: boolean;
 }
 
 export interface DisplayCandidate {
@@ -128,9 +173,14 @@ export interface DisplayCandidate {
 }
 
 export type DisplayPayload =
-  | { screen: 'OPENS_SOON'; version: number; candidates: DisplayCandidate[] }
-  | { screen: 'VOTING_OPEN'; version: number; turnout: Turnout }
-  | { screen: 'VOTING_CLOSED'; version: number; turnout: Turnout }
-  | { screen: 'WINNER_REVEAL'; version: number; turnout: Turnout }
-  | { screen: 'FINAL_RESULTS'; version: number; turnout: Turnout; results: ResultsSummary }
-  | { screen: 'MOST_VOTES'; version: number; turnout: Turnout; results: ResultsSummary };
+  | { screen: 'OPENS_SOON'; candidates: DisplayCandidate[] }
+  | { screen: 'VOTING_OPEN'; turnout: Turnout }
+  | { screen: 'VOTING_CLOSED'; turnout: Turnout }
+  | { screen: 'WINNER_REVEAL'; turnout: Turnout; candidateNumbers: number[] }
+  | { screen: 'FINAL_RESULTS'; turnout: Turnout; results: ResultsSummary }
+  | { screen: 'MOST_VOTES'; turnout: Turnout; results: ResultsSummary };
+
+export interface ExportFile {
+  blob: Blob;
+  fileName: string;
+}

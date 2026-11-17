@@ -1,5 +1,5 @@
 /** Scenario and data-set names, safe to import from client code (no mock database). */
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 export const SCENARIOS = [
   'not-started',
@@ -16,18 +16,25 @@ export const SCENARIOS = [
 
 export type ScenarioName = (typeof SCENARIOS)[number];
 
-export const CANDIDATE_SET_NAMES = ['default', 'one', 'six', 'long'] as const;
+export const CANDIDATE_SET_NAMES = [
+  'default',
+  'none',
+  'missing-photo',
+  'one',
+  'six',
+  'long',
+] as const;
 
 export const VOTER_COUNT_OPTIONS = [139, 1000] as const;
 
 export const scenarioSchema = z.enum(SCENARIOS);
 
 export const dataOptionsSchema = z.object({
-  candidateSet: z.enum(CANDIDATE_SET_NAMES).optional(),
-  voterCount: z.number().int().min(1).max(5000).optional(),
+  candidateSet: z.optional(z.enum(CANDIDATE_SET_NAMES)),
+  voterCount: z.optional(z.int().check(z.minimum(1), z.maximum(5000))),
 });
 
 export const scenarioBodySchema = z.object({
   scenario: scenarioSchema,
-  data: dataOptionsSchema.optional(),
+  data: z.optional(dataOptionsSchema),
 });

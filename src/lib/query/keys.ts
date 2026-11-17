@@ -13,6 +13,8 @@ export const queryKeys = {
     overview: ['admin', 'overview'] as const,
     voters: (q: string, page: number) => ['admin', 'voters', { q, page }] as const,
     results: ['admin', 'results'] as const,
+    candidates: ['admin', 'candidates'] as const,
+    candidate: (id: string) => ['admin', 'candidates', id] as const,
   },
   display: ['display'] as const,
 };

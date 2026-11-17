@@ -7,7 +7,7 @@
  */
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { SESSION_COOKIES } from '@/config/constants';
+import { sessionCookieNames } from '@/config/env';
 
 const VOTER_PREFIXES = ['/candidates', '/vote', '/already-voted', '/closed'];
 
@@ -52,11 +52,12 @@ export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
   const voterRoute = isVoterRoute(pathname);
   const adminRoute = isAdminRoute(pathname);
+  const cookies = sessionCookieNames();
 
-  if (voterRoute && !request.cookies.has(SESSION_COOKIES.voter)) {
+  if (voterRoute && !request.cookies.has(cookies.voter)) {
     return redirectToSignIn(request, '/sign-in');
   }
-  if (adminRoute && !request.cookies.has(SESSION_COOKIES.admin)) {
+  if (adminRoute && !request.cookies.has(cookies.admin)) {
     return redirectToSignIn(request, '/admin/sign-in');
   }
 

@@ -22,6 +22,7 @@ export function makeQueryClient(): QueryClient {
       mutations: {
         // Mutations are never retried automatically: vote retry is an explicit, idempotent user action.
         retry: false,
+        gcTime: QUERY.mutationGcMs,
       },
     },
   });

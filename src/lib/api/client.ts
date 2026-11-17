@@ -2,17 +2,21 @@
  * The only place in the app that performs HTTP. Same-origin `/api/*`:
  * the mock route handler answers in mock builds, Next rewrites to the backend otherwise.
  */
-import type { z } from 'zod';
+import * as z from 'zod/mini';
 
 import { HTTP } from '@/config/constants';
 
-import { ApiError, errorFromResponse } from './errors';
+import { errorFromResponse } from './errorResponse';
+import { ApiError } from './errors';
 
 export const API_PREFIX = '/api';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
-export interface RequestOptions<S extends z.ZodType> {
+/** Any Zod 4 schema (mini or classic): both build on the core type. */
+type Schema = z.core.$ZodType;
+
+export interface RequestOptions<S extends Schema> {
   method?: Method;
   body?: unknown;
   schema: S;
@@ -42,23 +46,58 @@ function buildUrl(path: string): string {
     : new URL(relative, window.location.origin).toString();
 }
 
-export async function request<S extends z.ZodType>(
+export interface EventStreamHandlers {
+  onOpen: () => void;
+  /** Raw `data` of one named event. */
+  onEvent: (data: string) => void;
+  /** Connection lost or refused. The caller decides whether to close and fall back. */
+  onError: () => void;
+}
+
+export interface EventStreamHandle {
+  close: () => void;
+}
+
+/**
+ * Server-sent events from same-origin `/api/*`. Returns null where EventSource is not available
+ * (tests, old browsers), so callers can fall back to polling.
+ */
+export function openEventStream(
   path: string,
-  options: RequestOptions<S>,
-): Promise<z.infer<S>> {
-  const {
-    method = 'GET',
-    body,
-    schema,
-    headers = {},
-    timeoutMs = HTTP.timeoutMs,
-    signal,
-    skipAuthRedirect,
-  } = options;
+  eventName: string,
+  handlers: EventStreamHandlers,
+): EventStreamHandle | null {
+  if (typeof EventSource === 'undefined') return null;
+  const source = new EventSource(buildUrl(path));
+  source.addEventListener('open', handlers.onOpen);
+  source.addEventListener(eventName, (event) => {
+    if (event instanceof MessageEvent && typeof event.data === 'string')
+      handlers.onEvent(event.data);
+  });
+  source.addEventListener('error', handlers.onError);
+  return {
+    close: () => {
+      source.close();
+    },
+  };
+}
 
-  const timeoutSignal = AbortSignal.timeout(timeoutMs);
-  const combinedSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
+interface SendOptions {
+  method: Method;
+  body: unknown;
+  headers: Record<string, string>;
+  signal: AbortSignal | undefined;
+  timeoutSignal: AbortSignal;
+  combinedSignal: AbortSignal;
+  skipAuthRedirect: boolean | undefined;
+  accept?: string;
+}
 
+/** fetch + error mapping shared by JSON and file requests. FormData bodies go out as multipart. */
+async function send(path: string, options: SendOptions): Promise<Response> {
+  const { method, body, headers, signal, timeoutSignal, combinedSignal, skipAuthRedirect } =
+    options;
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
   let response: Response;
   try {
     response = await fetch(buildUrl(path), {
@@ -66,11 +105,11 @@ export async function request<S extends z.ZodType>(
       credentials: 'same-origin',
       cache: 'no-store',
       headers: {
-        Accept: 'application/json',
-        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        Accept: options.accept ?? 'application/json',
+        ...(body === undefined || isForm ? {} : { 'Content-Type': 'application/json' }),
         ...headers,
       },
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      ...(body === undefined ? {} : { body: isForm ? body : JSON.stringify(body) }),
       signal: combinedSignal,
     });
   } catch (cause) {
@@ -88,9 +127,65 @@ export async function request<S extends z.ZodType>(
     }
     throw error;
   }
+  return response;
+}
+
+/** Downloads a file (e.g. the results export). File name from Content-Disposition. */
+export async function requestFile(
+  path: string,
+  options: { timeoutMs?: number; signal?: AbortSignal } = {},
+): Promise<{ blob: Blob; fileName: string | null }> {
+  const timeoutSignal = AbortSignal.timeout(options.timeoutMs ?? HTTP.timeoutMs);
+  const combinedSignal = options.signal
+    ? AbortSignal.any([options.signal, timeoutSignal])
+    : timeoutSignal;
+  const response = await send(path, {
+    method: 'GET',
+    body: undefined,
+    headers: {},
+    signal: options.signal,
+    timeoutSignal,
+    combinedSignal,
+    skipAuthRedirect: false,
+    accept: '*/*',
+  });
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+  return {
+    blob: await response.blob(),
+    fileName: match?.[1] ? decodeURIComponent(match[1]) : null,
+  };
+}
+
+export async function request<S extends Schema>(
+  path: string,
+  options: RequestOptions<S>,
+): Promise<z.output<S>> {
+  const {
+    method = 'GET',
+    body,
+    schema,
+    headers = {},
+    timeoutMs = HTTP.timeoutMs,
+    signal,
+    skipAuthRedirect,
+  } = options;
+
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const combinedSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
+
+  const response = await send(path, {
+    method,
+    body,
+    headers,
+    signal,
+    timeoutSignal,
+    combinedSignal,
+    skipAuthRedirect,
+  });
 
   const json: unknown = response.status === 204 ? {} : await response.json().catch(() => null);
-  const parsed = schema.safeParse(json);
+  const parsed = z.safeParse(schema, json);
   if (!parsed.success) {
     throw new ApiError('UNKNOWN', {
       status: response.status,
