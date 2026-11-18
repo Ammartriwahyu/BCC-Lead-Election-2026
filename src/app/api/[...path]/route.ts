@@ -15,8 +15,12 @@ export const dynamic = 'force-dynamic';
 
 const NO_BACKEND_MESSAGE =
   'No backend: API_BASE_URL is not set on this server (docs/INTEGRATION.md).';
+const NO_SECRET_MESSAGE =
+  "BFF_SECRET is not set: the backend sees every voter with this server's IP, so its per-IP " +
+  'sign-in limits apply to everyone at once (docs/INTEGRATION.md).';
 
 let warned = false;
+let warnedSecret = false;
 
 async function upstreamOptions(): Promise<Omit<BffOptions, 'cookieNames'> | null> {
   if (process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
@@ -27,12 +31,20 @@ async function upstreamOptions(): Promise<Omit<BffOptions, 'cookieNames'> | null
       allowMockRoutes: true,
     };
   }
-  const base = getServerEnv().API_BASE_URL;
+  const env = getServerEnv();
+  const base = env.API_BASE_URL;
   if (!base) return null;
+  if (!env.BFF_SECRET && !warnedSecret) {
+    warnedSecret = true;
+    console.warn(`[api] ${NO_SECRET_MESSAGE}`);
+  }
   return {
     upstream: (request) => fetch(request, { cache: 'no-store' }),
-    upstreamOrigin: base.replace(/\/$/, ''),
+    upstreamOrigin: base.replace(/\/+$/, ''),
     allowMockRoutes: false,
+    ...(env.BFF_SECRET
+      ? { clientIp: { secret: env.BFF_SECRET, trustedHops: env.TRUSTED_PROXY_HOPS } }
+      : {}),
   };
 }
 

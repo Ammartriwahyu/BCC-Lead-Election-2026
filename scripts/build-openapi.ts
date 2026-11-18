@@ -115,7 +115,9 @@ function operation(name: string, spec: EndpointSpec): JsonObject {
     responses: { [String(spec.status)]: success, ...errorResponses(spec) },
   };
   if (parameters.length > 0) op.parameters = parameters;
-  if (spec.body) op.requestBody = { required: true, content: json(schemaOf(spec.body)) };
+  if (spec.body) {
+    op.requestBody = { required: !spec.bodyOptional, content: json(schemaOf(spec.body)) };
+  }
   if (spec.multipart) {
     op.requestBody = {
       required: true,

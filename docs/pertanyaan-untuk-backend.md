@@ -1,5 +1,7 @@
 # Pertanyaan untuk Tim Backend — Pilketum BCC 2026
 
+> **Status:** semua pertanyaan sudah dijawab tim backend pada 18 Nov 2026 dan sudah diterapkan di frontend. Ringkasan jawaban dan perubahannya ada di `docs/BACKEND_QUESTIONS.md`.
+
 Dari: tim frontend
 Acuan: dokumentasi "API Pilketum BCC" yang kami terima 17 Nov 2026
 

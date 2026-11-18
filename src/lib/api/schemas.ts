@@ -84,6 +84,8 @@ export const voterDtoSchema = z.object({
   study_program: z.optional(z.nullable(z.string())),
   department: z.optional(z.nullable(z.string())),
   has_voted: z.boolean(),
+  /** When the ballot was cast (UTC); null until then. */
+  voted_at: z.optional(z.nullable(isoDate)),
 });
 
 export const otpDeviceDtoSchema = z.object({
@@ -123,9 +125,14 @@ export const adminSessionDtoSchema = z.object({
   token: z.optional(z.string()),
   expires_at: z.optional(isoDate),
   username: z.string(),
+  /** Name for the topbar, default "Election Committee". */
+  display_name: z.optional(z.string()),
 });
 
-export const adminMeDtoSchema = z.object({ username: z.string() });
+export const adminMeDtoSchema = z.object({
+  username: z.string(),
+  display_name: z.optional(z.string()),
+});
 
 /* ---------- Candidates ---------- */
 
@@ -176,10 +183,15 @@ export const adminOverviewDtoSchema = z.object({
   /** Number of candidates only. Never votes per candidate. */
   candidates: count(),
   turnout: turnoutDtoSchema,
+  /** True once voting has been opened: candidates can no longer change (the backend's own rule). */
+  candidates_locked: z.optional(z.boolean()),
 });
 
-/** PUT /admin/display: the doc gives no response body (BACKEND_QUESTIONS); anything 2xx is fine. */
-export const displayChangeDtoSchema = z.looseObject({});
+/** PUT /admin/display answers with the status and the screen now on air. */
+export const displayChangeDtoSchema = z.object({
+  status: electionStatusSchema,
+  display_screen: displayScreenWireSchema,
+});
 
 export const adminVoterDtoSchema = z.object({
   nim: z.string(),
@@ -290,7 +302,16 @@ export const adminLoginBodySchema = z.object({ username: z.string(), password: z
 
 export const voteBodySchema = z.object({ candidate_id: positiveInt() });
 
-export const displayBodySchema = z.object({ screen: selectableScreenWireSchema });
+/** Optional guard: the backend refuses (409 INVALID_STATE) if the status is no longer this. */
+export const electionActionBodySchema = z.object({
+  expected_status: z.optional(electionStatusSchema),
+});
+
+/** `expected_screen`: the backend refuses (409 DISPLAY_CHANGED) if another screen is on air. */
+export const displayBodySchema = z.object({
+  screen: selectableScreenWireSchema,
+  expected_screen: z.optional(displayScreenWireSchema),
+});
 
 /** Same body for create and update (all fields sent again). Backend limits in the doc. */
 export const candidateBodySchema = z.object({

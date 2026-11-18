@@ -70,7 +70,7 @@ function ShellBody({ children }: { children: ReactNode }) {
             add: adminNavCopy.breadcrumbAdd,
             edit: adminNavCopy.breadcrumbEdit,
           })}
-          accountName={session.data.username}
+          accountName={session.data.displayName}
         />
         <main className="flex flex-col gap-32">{children}</main>
       </div>

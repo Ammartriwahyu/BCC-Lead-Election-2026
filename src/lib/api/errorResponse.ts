@@ -17,6 +17,8 @@ const CODE_MAP: Record<string, ErrorCode> = {
   ALREADY_VOTED: 'ALREADY_VOTED',
   VOTING_NOT_OPEN: 'VOTING_NOT_OPEN',
   INVALID_STATE: 'STATE_CONFLICT',
+  // Another committee member put a different screen on air (expected_screen did not match).
+  DISPLAY_CHANGED: 'STATE_CONFLICT',
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
   NOT_FOUND: 'NOT_FOUND',

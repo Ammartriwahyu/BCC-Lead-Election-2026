@@ -21,20 +21,24 @@ component → features/* hook → lib/api/endpoints.ts → lib/api/client.ts →
 
 ### 1. Configure
 
-| Variable                                       | When    | Value                                                                                                                                       |
-| ---------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_MOCKING`                      | build   | `disabled` (`pnpm build` forces it)                                                                                                         |
-| `API_BASE_URL`                                 | runtime | Backend **origin**, e.g. `https://api.example.org` (paths keep their `/api` prefix). Read by the server on every request; no rebuild needed |
-| `IMAGE_REMOTE_PATTERNS`                        | build   | Where `photo_url` points, e.g. `https://api.example.org/uploads/candidates/**` (`next/image` refuses other hosts)                           |
-| `SESSION_COOKIE_VOTER`, `SESSION_COOKIE_ADMIN` | runtime | Optional: names of the frontend's own session cookies (defaults `pilketum_voter_session` / `pilketum_admin_session`)                        |
-| `NEXT_PUBLIC_BOOTH_MODE`                       | build   | `true` on booth laptops (default)                                                                                                           |
+| Variable                                       | When    | Value                                                                                                                                                                                                              |
+| ---------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_API_MOCKING`                      | build   | `disabled` (`pnpm build` forces it)                                                                                                                                                                                |
+| `API_BASE_URL`                                 | runtime | Backend **base URL** without `/api`: `https://pilketum.bccdev.id` (production) or `https://pilketum.bccdev.id/staging`. Read on every request; no rebuild needed                                                   |
+| `BFF_SECRET`                                   | runtime | Secret for `X-BFF-Secret`, from the backend team (one for production, one for staging). Server-only; never in the repo or a `NEXT_PUBLIC_*` var. Without it the server logs a warning and per-IP limits see one IP |
+| `TRUSTED_PROXY_HOPS`                           | runtime | Proxies in front of the Next server that append to `X-Forwarded-For` (default `1`: nginx alone; `2`: e.g. Cloudflare + nginx)                                                                                      |
+| `IMAGE_REMOTE_PATTERNS`                        | build   | Where `photo_url` points: `https://pilketum.bccdev.id/**` (`next/image` refuses other hosts)                                                                                                                       |
+| `SESSION_COOKIE_VOTER`, `SESSION_COOKIE_ADMIN` | runtime | Optional: names of the frontend's own session cookies (defaults `pilketum_voter_session` / `pilketum_admin_session`)                                                                                               |
+| `NEXT_PUBLIC_BOOTH_MODE`                       | build   | `true` on booth laptops (default)                                                                                                                                                                                  |
 
 ```bash
-IMAGE_REMOTE_PATTERNS=https://api.example.org/uploads/candidates/** pnpm build
+IMAGE_REMOTE_PATTERNS=https://pilketum.bccdev.id/** pnpm build
 pnpm check:bundle
 pnpm check:js
-API_BASE_URL=https://api.example.org pnpm start
+API_BASE_URL=https://pilketum.bccdev.id BFF_SECRET=… pnpm start
 ```
+
+Local development against staging: put `API_BASE_URL=https://pilketum.bccdev.id/staging`, the staging `BFF_SECRET` and `NEXT_PUBLIC_API_MOCKING=disabled` in the git-ignored `.env.local`, then `pnpm dev`.
 
 Without `API_BASE_URL` every `/api/*` call answers `503` with "No backend: API_BASE_URL is not set on this server", and the server logs it once.
 
@@ -43,13 +47,16 @@ Without `API_BASE_URL` every `/api/*` call answers `503` with "No backend: API_B
 The read-only live check calls the backend directly (Bearer tokens, like the BFF) and validates statuses, bodies, error bodies, tokens and both SSE streams against the registry. It never votes, changes the voting state, the display or a candidate.
 
 ```bash
-pnpm contract:check https://staging-api.example.org
+pnpm contract:check https://pilketum.bccdev.id/staging
 ```
 
-With test accounts (ask the backend team; never a real voter's password; the voter account must not use 2FA):
+The signed-in checks need staging test accounts (`voter1` and the staging committee account; never a real voter's password, the voter must not use 2FA). Put them in the git-ignored `.env.contract.local`, which the script reads (values already in the environment win):
 
 ```bash
-CONTRACT_VOTER_USERNAME=… CONTRACT_VOTER_PASSWORD=… CONTRACT_ADMIN_USERNAME=… CONTRACT_ADMIN_PASSWORD=… pnpm contract:check https://staging-api.example.org
+CONTRACT_VOTER_USERNAME=voter1
+CONTRACT_VOTER_PASSWORD=…
+CONTRACT_ADMIN_USERNAME=…
+CONTRACT_ADMIN_PASSWORD=…
 ```
 
 `pnpm contract:check --mock` runs the same checks in-process against the mock backend: 26 pass, 9 skipped (writes and the OTP step). That is the baseline.
@@ -58,9 +65,9 @@ Writes (vote, open / close / reopen, display, candidate changes, photo upload) a
 
 ### 3. Things the backend side must allow
 
-- **Client IP**: every request reaches the backend from the Next server. The BFF forwards `X-Forwarded-For`; the backend must trust it from the frontend server, or its per-IP limits (`RATE_LIMITED`, 300 streams per IP) count every voter as one (BACKEND_QUESTIONS #1).
-- **CORS** is not needed: the browser only talks to its own origin. `ALLOWED_ORIGINS` matters only if the backend rejects server-to-server requests without an `Origin` header (#12).
-- **Streams** (`/api/display/stream`, `/api/admin/stream`) must not be buffered by a proxy in front of the backend (nginx: `proxy_buffering off;`). The BFF passes the stream through and adds `X-Accel-Buffering: no` for the frontend's own proxy.
+- **Client IP** (agreed with the backend team): every request reaches the backend from the Next server, so the BFF adds `X-BFF-Secret` and `X-Client-IP`. The backend trusts `X-Client-IP` only with the right secret. The frontend's own proxy must append the real address to `X-Forwarded-For` (nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`); the BFF takes the entry `TRUSTED_PROXY_HOPS` from the right, so a header the browser made up is ignored. Login limits are per IP and per IP + username, so one booth room does not lock everyone out.
+- **CORS** is not needed: the browser only talks to its own origin, and the backend accepts requests without `Origin`.
+- **Streams** (`/api/display/stream`, `/api/admin/stream`) are not buffered on the backend side (nginx and the BCC proxy, `: ping` every 20 s, read timeout 1 h). The BFF passes the stream through and adds `X-Accel-Buffering: no`; the frontend's own nginx must not buffer `/api/display/stream` either (`proxy_buffering off;`, `proxy_read_timeout 1h;`).
 
 ### 4. Cookies and sessions (frontend side)
 

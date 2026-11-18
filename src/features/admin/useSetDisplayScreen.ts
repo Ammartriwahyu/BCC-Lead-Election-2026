@@ -14,12 +14,15 @@ const copy = adminCopy;
 
 interface Variables {
   screen: DisplayScreen;
+  /** The screen on air when the member clicked (sent as `expected_screen`). */
+  expected?: DisplayScreen;
 }
 
 /**
  * "Show on display": the row switches to "On screen" at once (optimistic) and rolls back if the
- * backend refuses (voting was reopened meanwhile: RESULTS_LOCKED). The API has no display version,
- * so the last committee member to choose wins; the 4 s overview poll shows everyone the change.
+ * backend refuses: voting was reopened meanwhile (RESULTS_LOCKED) or another committee member put
+ * a different screen on air first (DISPLAY_CHANGED -> STATE_CONFLICT). Then a toast explains and
+ * the overview is refetched, so nobody overwrites someone else's choice without seeing it.
  */
 export function useSetDisplayScreen() {
   const queryClient = useQueryClient();
@@ -33,7 +36,7 @@ export function useSetDisplayScreen() {
   };
 
   return useMutation({
-    mutationFn: ({ screen }: Variables) => setDisplayScreen(screen),
+    mutationFn: ({ screen, expected }: Variables) => setDisplayScreen(screen, expected),
     onMutate: async ({ screen }) => {
       // A poll that is in flight would overwrite the optimistic row with the old screen.
       await queryClient.cancelQueries({ queryKey: queryKeys.admin.overview });

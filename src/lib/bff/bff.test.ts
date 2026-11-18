@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { handleBffRequest, readCookie, sessionCookie, type BffOptions } from './bff';
+import { clientIpOf, handleBffRequest, readCookie, sessionCookie, type BffOptions } from './bff';
 
 const ORIGIN = 'https://pilketum.example.org';
 const COOKIES = { voter: 'voter_sid', admin: 'admin_sid' };
@@ -58,19 +58,42 @@ describe('handleBffRequest', () => {
     expect(response.headers.get('Set-Cookie')).toBeNull();
   });
 
-  it('sends the role token as Bearer, the client IP on, and the query string along', async () => {
+  it('sends the role token as Bearer, the client IP with the secret, and the query', async () => {
     const upstream = vi.fn(() => Promise.resolve(json({ ok: true })));
     await handleBffRequest(
       req('/admin/voters?page=2', {
         headers: { cookie: 'voter_sid=v; admin_sid=a%20b', 'x-forwarded-for': '10.0.0.7' },
       }),
-      options(upstream),
+      options(upstream, { clientIp: { secret: 's3cret', trustedHops: 1 } }),
     );
     const sent = (upstream.mock.calls as unknown as Request[][])[0]?.[0] as Request;
     expect(sent.url).toBe('https://api.example.org/api/admin/voters?page=2');
     expect(sent.headers.get('Authorization')).toBe('Bearer a b');
-    expect(sent.headers.get('X-Forwarded-For')).toBe('10.0.0.7');
+    expect(sent.headers.get('X-BFF-Secret')).toBe('s3cret');
+    expect(sent.headers.get('X-Client-IP')).toBe('10.0.0.7');
+    expect(sent.headers.get('X-Forwarded-For')).toBeNull();
     expect(sent.headers.get('cookie')).toBeNull();
+  });
+
+  it('keeps the base path of the backend URL (staging lives under /staging)', async () => {
+    const upstream = vi.fn(() => Promise.resolve(json({ ok: true })));
+    await handleBffRequest(
+      req('/election'),
+      options(upstream, { upstreamOrigin: 'https://api.example.org/staging' }),
+    );
+    const sent = (upstream.mock.calls as unknown as Request[][])[0]?.[0] as Request;
+    expect(sent.url).toBe('https://api.example.org/staging/api/election');
+  });
+
+  it('sends no client IP headers without a secret', async () => {
+    const upstream = vi.fn(() => Promise.resolve(json({ ok: true })));
+    await handleBffRequest(
+      req('/election', { headers: { 'x-forwarded-for': '10.0.0.7' } }),
+      options(upstream),
+    );
+    const sent = (upstream.mock.calls as unknown as Request[][])[0]?.[0] as Request;
+    expect(sent.headers.get('X-BFF-Secret')).toBeNull();
+    expect(sent.headers.get('X-Client-IP')).toBeNull();
   });
 
   it('answers 401 without calling the backend when the session cookie is missing', async () => {
@@ -165,5 +188,24 @@ describe('cookies', () => {
       headers: { 'x-forwarded-proto': 'https' },
     });
     expect(sessionCookie(proxied, 'voter_sid', 't', 10)).toMatch(/Secure; Max-Age=10$/);
+  });
+});
+
+describe('clientIpOf', () => {
+  const withHeaders = (headers: Record<string, string>) => new Request(ORIGIN, { headers });
+
+  it('takes the address the closest trusted proxy saw, not what the client wrote', () => {
+    // The client forged 6.6.6.6; nginx appended the real address.
+    const request = withHeaders({ 'x-forwarded-for': '6.6.6.6, 203.0.113.9' });
+    expect(clientIpOf(request, 1)).toBe('203.0.113.9');
+    // Behind two proxies (e.g. a CDN, then nginx) the client is one further left.
+    const twoHops = withHeaders({ 'x-forwarded-for': '203.0.113.9, 198.51.100.2' });
+    expect(clientIpOf(twoHops, 2)).toBe('203.0.113.9');
+  });
+
+  it('falls back to X-Real-IP and ignores anything that is not an IP', () => {
+    expect(clientIpOf(withHeaders({ 'x-real-ip': '2001:db8::1' }), 1)).toBe('2001:db8::1');
+    expect(clientIpOf(withHeaders({ 'x-forwarded-for': 'evil<script>' }), 1)).toBeUndefined();
+    expect(clientIpOf(withHeaders({}), 1)).toBeUndefined();
   });
 });

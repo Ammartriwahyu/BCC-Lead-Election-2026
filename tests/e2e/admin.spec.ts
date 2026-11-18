@@ -42,7 +42,7 @@ test.describe('committee sign in', () => {
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page).toHaveURL(/\/admin$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
-    await expect(page.getByText('committee', { exact: true })).toBeVisible();
+    await expect(page.getByText('Election Committee', { exact: true })).toBeVisible();
   });
 
   test('a voter account cannot open the panel', async ({ page, request }) => {

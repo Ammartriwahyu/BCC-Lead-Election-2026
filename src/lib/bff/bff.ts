@@ -7,8 +7,22 @@
  * Same-origin for the browser, so no CORS and the CSP keeps `connect-src 'self'`.
  *
  * Only endpoints in the registry (lib/api/contract.ts) are forwarded. Server-only module.
+ *
+ * Rate limits on the backend are per client IP. Every request leaves from this server, so the
+ * browser's IP goes along as `X-Client-IP`, with `X-BFF-Secret` to prove it comes from here (the
+ * backend ignores `X-Client-IP` without the right secret).
  */
 import { matchEndpoint, type EndpointSpec, type SessionRole } from '@/lib/api/contract';
+
+export interface ClientIpOptions {
+  /** Shared with the backend (env BFF_SECRET). Never sent to the browser. */
+  secret: string;
+  /**
+   * Proxies in front of this server that append to `X-Forwarded-For` (env TRUSTED_PROXY_HOPS).
+   * Entries further left come from the client and could be forged, so they are not used.
+   */
+  trustedHops: number;
+}
 
 export interface BffOptions {
   /** Sends a request to the backend (fetch, or the in-process mock). */
@@ -18,6 +32,8 @@ export interface BffOptions {
   cookieNames: Record<SessionRole, string>;
   /** Mock builds: also forward `/api/__mock/*` (scenario switcher, mock photos). */
   allowMockRoutes: boolean;
+  /** Real backend: pass the browser's IP on (see the module comment). */
+  clientIp?: ClientIpOptions;
 }
 
 const API_PREFIX = '/api';
@@ -88,17 +104,41 @@ function tokenRole(spec: EndpointSpec): SessionRole | null {
   return spec.auth === 'public' ? null : spec.auth;
 }
 
-function upstreamHeaders(request: Request, token: string | undefined): Headers {
+const IP_PATTERN = /^[0-9a-f.:]{2,45}$/i;
+
+/**
+ * The browser's IP as seen by the closest trusted proxy: each proxy appends the address it got the
+ * request from to `X-Forwarded-For`, so the entry `trustedHops` from the right is the client.
+ * Falls back to `X-Real-IP`. Undefined when there is nothing usable.
+ */
+export function clientIpOf(request: Request, trustedHops: number): string | undefined {
+  const chain = (request.headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const candidate =
+    chain.length > 0
+      ? chain[Math.max(0, chain.length - Math.max(1, trustedHops))]
+      : request.headers.get('x-real-ip')?.trim();
+  return candidate && IP_PATTERN.test(candidate) ? candidate : undefined;
+}
+
+function upstreamHeaders(
+  request: Request,
+  token: string | undefined,
+  clientIp: ClientIpOptions | undefined,
+): Headers {
   const headers = new Headers();
   for (const name of FORWARDED_REQUEST_HEADERS) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
   if (token) headers.set('Authorization', `Bearer ${token}`);
-  // Rate limits on the backend are per client IP: pass the browser's address on.
-  const client =
-    request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? undefined;
-  if (client) headers.set('X-Forwarded-For', client);
+  if (clientIp) {
+    headers.set('X-BFF-Secret', clientIp.secret);
+    const ip = clientIpOf(request, clientIp.trustedHops);
+    if (ip) headers.set('X-Client-IP', ip);
+  }
   return headers;
 }
 
@@ -157,7 +197,7 @@ export async function handleBffRequest(request: Request, options: BffOptions): P
     options.upstream(
       new Request(`${options.upstreamOrigin}${API_PREFIX}${upstreamPath}${url.search}`, {
         method: request.method,
-        headers: upstreamHeaders(request, token),
+        headers: upstreamHeaders(request, token, options.clientIp),
         ...(hasBody ? { body: await request.arrayBuffer() } : {}),
         signal: request.signal,
       }),

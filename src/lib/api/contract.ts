@@ -26,6 +26,7 @@ import {
   displayBodySchema,
   displayChangeDtoSchema,
   displayPayloadDtoSchema,
+  electionActionBodySchema,
   electionActionSchema,
   electionDtoSchema,
   electionStateDtoSchema,
@@ -52,6 +53,8 @@ export interface EndpointSpec {
   auth: EndpointAuth;
   /** JSON body, or a multipart form (`multipart: 'photo'` names the file field). */
   body?: z.core.$ZodType;
+  /** The JSON body may be left out. */
+  bodyOptional?: boolean;
   multipart?: string;
   /** Path parameters (`{name}` in `path`). */
   params?: Record<string, z.core.$ZodType>;
@@ -210,6 +213,8 @@ export const ENDPOINTS = {
     ...API_ROUTES.changeElectionState,
     auth: 'admin',
     params: { action: electionActionSchema },
+    body: electionActionBodySchema,
+    bodyOptional: true,
     status: 200,
     response: electionStateDtoSchema,
     errors: ['INVALID_STATE', 'CANDIDATES_INCOMPLETE'],
@@ -220,7 +225,7 @@ export const ENDPOINTS = {
     body: displayBodySchema,
     status: 200,
     response: displayChangeDtoSchema,
-    errors: ['RESULTS_LOCKED', 'INVALID_SCREEN'],
+    errors: ['RESULTS_LOCKED', 'INVALID_SCREEN', 'DISPLAY_CHANGED'],
   },
   previewDisplay: {
     ...API_ROUTES.previewDisplay,
@@ -339,6 +344,7 @@ export const ERROR_STATUS: Record<string, number> = {
   CANDIDATES_INCOMPLETE: 409,
   INVALID_STATE: 409,
   RESULTS_LOCKED: 409,
+  DISPLAY_CHANGED: 409,
   PHOTO_TOO_LARGE: 413,
   VALIDATION_FAILED: 422,
   PHOTO_INVALID: 422,

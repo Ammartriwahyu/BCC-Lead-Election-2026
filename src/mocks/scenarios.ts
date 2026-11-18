@@ -78,6 +78,7 @@ export function applyScenario(name: ScenarioName, data: Partial<DataOptions> = {
       db.tallies.forEach((_, key) => db.tallies.set(key, 0));
       db.members.forEach((m) => {
         m.hasVoted = false;
+        m.votedAt = null;
       });
       setElectionStatus(db, 'closed');
       break;

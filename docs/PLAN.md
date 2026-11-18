@@ -70,6 +70,8 @@
 | 2026-11-17 | 8 | JS budget kept: `lib/api/routes.ts` (method + path, no schemas) for the browser, each call imports only its schema; endpoint summaries in `contractDocs.ts`; copy split into `signInCopy.ts` and `candidatesCopy.ts`; the election dialog and the candidate form load lazily | The new endpoints and screens took admin pages to 206 KB and the form to 221 KB; now ≤ 199.8 KB everywhere |
 | 2026-11-17 | 8 | Candidate photos use `getImageProps` + plain `<img>` (`components/ui/CandidateImage.tsx`) instead of `<Image>` | With real photos every `<Image>` on the ballot stayed in memory after the voter left (≈ 3 DOM nodes per voter in the booth load test); still resized by the image optimizer |
 | 2026-11-17 | 8 | Booth auto sign-out after the vote (V5) and on "already voted" (V5b): 10 s → 3 s (`BOOTH.autoSignOutSeconds`) | Committee request: the booth is free for the next voter sooner. The voter can still press Sign out at once |
+| 2026-11-18 | 8 | Backend answers applied: BFF sends `X-BFF-Secret` + `X-Client-IP` (env `BFF_SECRET`, `TRUSTED_PROXY_HOPS`) instead of `X-Forwarded-For`; `API_BASE_URL` may carry a path (staging `/staging`) | Agreed with the backend: the frontend server's IP may change, so a shared secret proves the header; the client IP is taken from the trusted proxy's entry so the browser cannot forge it |
+| 2026-11-18 | 8 | `voted_at` (V5b time), `display_name` (topbar), `candidates_locked` (A6–A8 lock), `expected_status` / `expected_screen` with `DISPLAY_CHANGED` → `STATE_CONFLICT`; mock does the same | Fields added by the backend on request; two committee members can no longer overwrite each other's display choice silently |
 | 2026-11-17 | 8 | Open voting needs exactly 3 complete candidates (backend), not "at least 2" (spec 4.4); form limits use the stricter spec values (name 80, mission 160) | Backend is authoritative for opening; asked in BACKEND_QUESTIONS #5–6 |
 | 2026-11-17 | 6 | Load and endurance specs in `tests/load` (3 booths × 139 voters; one booth × 20 voters memory; display 4 h on a fake clock) | Spec §10 "Beban & ketahanan"; Chromium DevTools metrics |
 
@@ -159,7 +161,7 @@ Auto sign-out countdown (V5/V5b), dialog idle "Still there?", banner offline, 40
 5. **Display** — 6 layar, scale-to-fit, adapter SSE→polling 3 dtk, backoff, wake lock, F fullscreen, kursor tersembunyi, fade 400 ms.
 6. **Hardening & QA** — seluruh bagian 10, `docs/QA_REPORT.md`. **Selesai 17 Nov 2026**; sisa uji manual tercantum di QA_REPORT §10.
 7. **Integration readiness** — rapikan `lib/api` + `API_CONTRACT.md`, daftar pertanyaan untuk tim backend. **Selesai 17 Nov 2026**: registry `lib/api/contract.ts`, `docs/openapi.json`, `pnpm contract:check`, `docs/INTEGRATION.md`, `docs/BACKEND_QUESTIONS.md`. Sisa: jawaban tim backend, lalu langkah di INTEGRATION.md.
-8. **Integrasi API backend** — dokumentasi "API Pilketum BCC" diterapkan lewat BFF; halaman Candidates (A6–A8), langkah OTP, export hasil. **Selesai 17 Nov 2026**; sisa: staging + akun uji, jawaban BACKEND_QUESTIONS #1–12.
+8. **Integrasi API backend** — dokumentasi "API Pilketum BCC" diterapkan lewat BFF; halaman Candidates (A6–A8), langkah OTP, export hasil. **Selesai 17 Nov 2026**; jawaban tim backend diterapkan 18 Nov 2026. Sisa: `pnpm contract:check` ke staging dengan akun uji, uji manual QA_REPORT §10 di staging, isi `BFF_SECRET` production di server.
 
 ## Risiko
 

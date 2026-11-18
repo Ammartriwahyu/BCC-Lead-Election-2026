@@ -12,6 +12,7 @@ import {
   CANDIDATE_SETS,
   COMMITTEE,
   DEFAULT_VOTER_COUNT,
+  PRE_VOTED_AT,
   type CandidateSet,
   type CommitteeFixture,
 } from './fixtures';
@@ -24,6 +25,8 @@ export interface MemberRecord {
   password: string;
   isVoter: boolean;
   hasVoted: boolean;
+  /** ISO time of the ballot, null until then. */
+  votedAt: string | null;
   department: string;
   classYear: number;
   studyProgram: string;
@@ -160,6 +163,7 @@ function createDb(options: DataOptions): MockDb {
       password: m.password,
       isVoter: m.isVoter,
       hasVoted: m.votedInitially,
+      votedAt: m.votedInitially ? PRE_VOTED_AT : null,
       department: m.department,
       classYear: m.classYear,
       studyProgram: m.studyProgram,
@@ -237,6 +241,7 @@ export function setElectionStatus(db: MockDb, status: ElectionStatusDto): void {
 
 export function recordVote(db: MockDb, member: MemberRecord, candidateId: number): void {
   member.hasVoted = true;
+  member.votedAt = new Date().toISOString();
   db.tallies.set(candidateId, (db.tallies.get(candidateId) ?? 0) + 1);
 }
 

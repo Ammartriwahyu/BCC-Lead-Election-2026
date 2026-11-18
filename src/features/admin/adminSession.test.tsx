@@ -32,7 +32,10 @@ describe('AdminSignInForm (A0)', () => {
     await waitFor(() => {
       expect(navigation.router.replace).toHaveBeenCalledWith('/admin');
     });
-    expect(queryClient.getQueryData(['admin', 'me'])).toEqual({ username: 'committee' });
+    expect(queryClient.getQueryData(['admin', 'me'])).toEqual({
+      username: 'committee',
+      displayName: 'Election Committee',
+    });
   });
 
   it('returns to the page that asked for sign-in, but never outside the panel', async () => {
@@ -108,8 +111,8 @@ describe('AdminShell', () => {
     resetNavigation('/admin/voters');
     renderWithProviders(shell);
     expect(await screen.findByText('page content')).toBeInTheDocument();
-    // The API gives the committee account a username only.
-    expect(screen.getByText('committee')).toBeInTheDocument();
+    // The topbar shows the backend's display_name (Figma: "Election Committee").
+    expect(screen.getByText('Election Committee')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent(
       'Election/Voter list',
     );

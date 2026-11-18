@@ -37,8 +37,8 @@ export function CandidatesView() {
     );
   }
 
-  const { election, everOpened } = overview.data;
-  const editable = election.state === 'NOT_STARTED' && !everOpened;
+  const { election, candidatesLocked } = overview.data;
+  const editable = election.state === 'NOT_STARTED' && !candidatesLocked;
   const list = candidates.data;
   const full = list.length >= CANDIDATE.ballotNumbers.length;
 

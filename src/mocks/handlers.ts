@@ -14,6 +14,7 @@ import {
   adminLoginBodySchema,
   candidateBodySchema,
   displayBodySchema,
+  electionActionBodySchema,
   otpBodySchema,
   selectableScreenWireSchema,
   voteBodySchema,
@@ -149,6 +150,7 @@ const voterDto = (m: MemberRecord): VoterDto => ({
   study_program: m.studyProgram,
   department: m.department,
   has_voted: m.hasVoted,
+  voted_at: m.votedAt,
 });
 
 const photoUrl = (c: CandidateRecord) => (c.photo ? `/api/__mock/uploads/${c.photo.file}` : null);
@@ -237,6 +239,7 @@ const overviewDto = (db: MockDb) => ({
   closed_at: db.closedAt,
   candidates: db.candidates.length,
   turnout: turnoutDto(db),
+  candidates_locked: db.everOpened,
 });
 
 const electionStateDto = (db: MockDb) => ({
@@ -524,13 +527,16 @@ export const handlers = [
     return HttpResponse.json({
       ...startSession(db, 'admin', admin.username),
       username: admin.username,
+      display_name: admin.displayName,
     });
   }),
 
   http.get(route('getAdminMe'), ({ request }) => {
-    const auth = authorize(getDb(), request, ['admin']);
+    const db = getDb();
+    const auth = authorize(db, request, ['admin']);
     if (isResponse(auth)) return auth;
-    return HttpResponse.json({ username: auth.userId });
+    const admin = db.committee.find((a) => a.username === auth.userId);
+    return HttpResponse.json({ username: auth.userId, display_name: admin?.displayName });
   }),
 
   /* ----- committee data ----- */
@@ -557,6 +563,12 @@ export const handlers = [
     const auth = authorize(db, request, ['admin']);
     if (isResponse(auth)) return auth;
     const action = String(params.action);
+    // The body is optional; `expected_status` refuses a click made on a stale page.
+    const raw = await readJson(request);
+    const body = electionActionBodySchema.safeParse(raw ?? {});
+    if (!body.success) return error(400, 'BAD_REQUEST');
+    const expected = body.data.expected_status;
+    if (expected !== undefined && expected !== db.status) return error(409, 'INVALID_STATE');
     if (action === 'open') {
       if (db.status !== 'not_started') return error(409, 'INVALID_STATE');
       if (db.candidates.length !== REQUIRED_CANDIDATES || !db.candidates.every(isComplete))
@@ -582,8 +594,12 @@ export const handlers = [
     const body = displayBodySchema.safeParse(await readJson(request));
     if (!body.success) return error(422, 'INVALID_SCREEN');
     if (db.status !== 'closed') return error(409, 'RESULTS_LOCKED');
+    const expected = body.data.expected_screen;
+    if (expected !== undefined && expected !== db.displayScreen) {
+      return error(409, 'DISPLAY_CHANGED', { display_screen: db.displayScreen });
+    }
     db.displayScreen = body.data.screen;
-    return HttpResponse.json({ display_screen: db.displayScreen });
+    return HttpResponse.json({ status: db.status, display_screen: db.displayScreen });
   }),
 
   http.get(route('previewDisplay'), ({ request }) => {

@@ -1269,6 +1269,17 @@
                             },
                             "has_voted": {
                               "type": "boolean"
+                            },
+                            "voted_at": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -1457,6 +1468,17 @@
                         },
                         "has_voted": {
                           "type": "boolean"
+                        },
+                        "voted_at": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -1658,6 +1680,17 @@
                         },
                         "has_voted": {
                           "type": "boolean"
+                        },
+                        "voted_at": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -1953,6 +1986,9 @@
                     },
                     "username": {
                       "type": "string"
+                    },
+                    "display_name": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -2025,6 +2061,9 @@
                   "type": "object",
                   "properties": {
                     "username": {
+                      "type": "string"
+                    },
+                    "display_name": {
                       "type": "string"
                     }
                   },
@@ -2148,6 +2187,9 @@
                         "not_voted",
                         "percent"
                       ]
+                    },
+                    "candidates_locked": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -2281,6 +2323,9 @@
                     "not_voted",
                     "percent"
                   ]
+                },
+                "candidates_locked": {
+                  "type": "boolean"
                 }
               },
               "required": [
@@ -2454,6 +2499,26 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expected_status": {
+                    "type": "string",
+                    "enum": [
+                      "not_started",
+                      "open",
+                      "closed"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "adminToken": []
@@ -2475,8 +2540,31 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
-                  "additionalProperties": {}
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "display_screen": {
+                      "type": "string",
+                      "enum": [
+                        "voting_opens_soon",
+                        "voting_open",
+                        "voting_closed",
+                        "winner_suspense",
+                        "final_results",
+                        "most_votes"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "display_screen"
+                  ]
                 }
               }
             }
@@ -2502,7 +2590,7 @@
             }
           },
           "409": {
-            "description": "RESULTS_LOCKED",
+            "description": "RESULTS_LOCKED | DISPLAY_CHANGED",
             "content": {
               "application/json": {
                 "schema": {
@@ -2532,6 +2620,17 @@
                   "screen": {
                     "type": "string",
                     "enum": [
+                      "voting_closed",
+                      "winner_suspense",
+                      "final_results",
+                      "most_votes"
+                    ]
+                  },
+                  "expected_screen": {
+                    "type": "string",
+                    "enum": [
+                      "voting_opens_soon",
+                      "voting_open",
                       "voting_closed",
                       "winner_suspense",
                       "final_results",
@@ -4578,6 +4677,7 @@
           "CANDIDATES_INCOMPLETE",
           "INVALID_STATE",
           "RESULTS_LOCKED",
+          "DISPLAY_CHANGED",
           "PHOTO_TOO_LARGE",
           "VALIDATION_FAILED",
           "PHOTO_INVALID",

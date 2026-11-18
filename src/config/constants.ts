@@ -127,6 +127,9 @@ export const SESSION_COOKIES = {
   admin: 'pilketum_admin_session',
 } as const;
 
+/** Upper bound for TRUSTED_PROXY_HOPS (env): more proxies than this is a misconfiguration. */
+export const MAX_TRUSTED_PROXY_HOPS = 5;
+
 export const ROUTES = {
   signIn: '/sign-in',
   candidates: '/candidates',
