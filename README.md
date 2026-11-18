@@ -66,15 +66,17 @@ Optional: `&candidates=one|six|long` and `&voters=1000`. Applying a scenario res
 
 Validated by `src/config/env.ts`.
 
-| Name                      | Default                  | Purpose                                                                                                                 |
-| ------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_MOCKING` | `disabled`               | `enabled` runs the in-repo mock API. Build-time: `pnpm build` always forces `disabled`                                  |
-| `NEXT_PUBLIC_BOOTH_MODE`  | `true`                   | Shared-device mode: idle timeout and auto sign-out                                                                      |
-| `API_BASE_URL`            | –                        | Runtime. Backend origin (e.g. `https://api.example.org`); the Next server forwards `/api/*` there with the Bearer token |
-| `IMAGE_REMOTE_PATTERNS`   | –                        | Build time. Hosts allowed for candidate photos, e.g. `https://cdn.example.org/photos/**`                                |
-| `SESSION_COOKIE_VOTER`    | `pilketum_voter_session` | Runtime. Name of the backend's voter session cookie (checked by `src/proxy.ts`)                                         |
-| `SESSION_COOKIE_ADMIN`    | `pilketum_admin_session` | Runtime. Name of the backend's committee session cookie                                                                 |
-| `NEXT_OUTPUT`             | –                        | `standalone` for self-host builds (`pnpm build:standalone`)                                                             |
+| Name                      | Default                  | Purpose                                                                                                                   |
+| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_MOCKING` | `disabled`               | `enabled` runs the in-repo mock API. Build-time: `pnpm build` always forces `disabled`                                    |
+| `NEXT_PUBLIC_BOOTH_MODE`  | `true`                   | Shared-device mode: idle timeout and auto sign-out                                                                        |
+| `API_BASE_URL`            | –                        | Runtime. Backend base URL without `/api` (`https://pilketum.bccdev.id`, staging `…/staging`); `/api/*` is forwarded there |
+| `BFF_SECRET`              | –                        | Runtime, server-only. `X-BFF-Secret` from the backend team (per environment), so rate limits see the voter's IP           |
+| `TRUSTED_PROXY_HOPS`      | `1`                      | Runtime. Proxies in front of the Next server that append to `X-Forwarded-For`                                             |
+| `IMAGE_REMOTE_PATTERNS`   | –                        | Build time. Hosts allowed for candidate photos: `https://pilketum.bccdev.id/**`                                           |
+| `SESSION_COOKIE_VOTER`    | `pilketum_voter_session` | Runtime. Name of the backend's voter session cookie (checked by `src/proxy.ts`)                                           |
+| `SESSION_COOKIE_ADMIN`    | `pilketum_admin_session` | Runtime. Name of the backend's committee session cookie                                                                   |
+| `NEXT_OUTPUT`             | –                        | `standalone` for self-host builds (`pnpm build:standalone`)                                                               |
 
 ## Scripts
 
@@ -124,7 +126,7 @@ Rules for contributors (and Claude Code) are in `CLAUDE.md`.
 
 Full runbook: `docs/INTEGRATION.md`. In short:
 
-1. Build with `IMAGE_REMOTE_PATTERNS` set to the photo host; run with `API_BASE_URL` set to the backend origin.
-2. `pnpm contract:check <stagingOrigin>` (with test accounts) until every check passes.
-3. Make sure the backend trusts `X-Forwarded-For` from the frontend server (rate limits are per IP).
+1. Build with `IMAGE_REMOTE_PATTERNS` set to the photo host; run with `API_BASE_URL` and `BFF_SECRET` of that environment.
+2. `pnpm contract:check https://pilketum.bccdev.id/staging` (test accounts in `.env.contract.local`) until every check passes.
+3. Make sure the frontend's proxy appends the client address to `X-Forwarded-For` (`TRUSTED_PROXY_HOPS`).
 4. Run the QA checklist again on staging.
