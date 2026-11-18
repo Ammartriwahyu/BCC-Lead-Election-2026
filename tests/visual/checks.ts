@@ -70,9 +70,25 @@ function clippedText(): string[] {
   return found;
 }
 
+/**
+ * Waits until every entrance animation (DEVIATIONS #84) has finished, so positions, overlaps and
+ * contrast are measured on the final frame. Endless ones (spinner, breathing "?") are skipped.
+ */
+export async function settleAnimations(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
+}
+
 export async function checkScreen(page: Page, name: string, options: CheckOptions = {}) {
   const { fullPage = true, noVerticalScroll = false } = options;
   await page.waitForLoadState('networkidle');
+  await settleAnimations(page);
   const overflow = await page.evaluate(() => ({
     x: document.documentElement.scrollWidth - window.innerWidth,
     y: document.documentElement.scrollHeight - window.innerHeight,

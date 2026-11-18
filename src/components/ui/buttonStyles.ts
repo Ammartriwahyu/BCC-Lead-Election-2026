@@ -10,12 +10,13 @@ import { cx } from '@/lib/utils/cx';
  * - outline-on-dark: Back to candidates (slate/300 border on navy)
  * - danger-outline: Delete candidate (A8, red/700 outline)
  * Hover/pressed for primary and secondary follow the Figma variants; the others are NEW (DEVIATIONS).
+ * Every variant eases its colours and sinks slightly while pressed (motion-press, DEVIATIONS #84).
  */
 export type ButtonVariant =
   'primary' | 'secondary' | 'dark' | 'on-dark' | 'outline-on-dark' | 'danger-outline';
 
 const base =
-  'inline-flex min-h-48 items-center justify-center gap-8 rounded-lg px-20 py-12 text-body-1-medium whitespace-nowrap transition-colors select-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed';
+  'inline-flex min-h-48 items-center justify-center gap-8 rounded-lg px-20 py-12 text-body-1-medium whitespace-nowrap select-none motion-press disabled:cursor-not-allowed aria-disabled:cursor-not-allowed';
 
 const variants: Record<ButtonVariant, string> = {
   primary:

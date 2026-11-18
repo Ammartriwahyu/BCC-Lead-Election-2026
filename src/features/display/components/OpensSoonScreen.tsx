@@ -22,7 +22,7 @@ export function OpensSoonScreen({ candidates }: { candidates: DisplayCandidate[]
         <h2 id="lineup-title" className="text-heading-5 text-text-on-dark-muted">
           {copy.lineup}
         </h2>
-        <ul className="flex flex-wrap gap-x-40 gap-y-24">
+        <ul className="flex motion-stagger flex-wrap gap-x-40 gap-y-24">
           {lineup.map((candidate) => (
             <li key={candidate.number} className="flex items-center gap-20">
               <DisplayPhoto name={candidate.name} photoUrl={candidate.photoUrl} size={96} />

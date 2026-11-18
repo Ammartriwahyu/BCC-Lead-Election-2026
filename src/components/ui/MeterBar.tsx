@@ -30,7 +30,7 @@ export function MeterBar({ ratio, size = 'md', tone = 'strong', className }: Met
       <div
         data-testid="meter-fill"
         className={cx(
-          'h-full rounded-full transition-[width] duration-300',
+          'h-full animate-reveal-right rounded-full transition-[width] duration-300 motion-follow',
           tone === 'strong' ? 'bg-action-primary' : 'bg-primary-300',
         )}
         style={{ width: `${percent}%` }}

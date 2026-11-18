@@ -53,7 +53,7 @@ export function CandidateProfileHero({
         <span className="hidden md:inline">{copy.back}</span>
       </button>
 
-      <div className="flex w-full items-center gap-16 md:gap-40">
+      <div className="flex w-full animate-rise-in items-center gap-16 md:gap-40">
         <CandidatePhoto
           name={candidate.name}
           photoUrl={candidate.photoUrl}

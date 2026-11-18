@@ -95,7 +95,7 @@ export function ResultsView() {
             {copy.integrity}
           </Alert>
         )}
-        <ol aria-label={copy.listLabel} className="flex flex-col gap-16">
+        <ol aria-label={copy.listLabel} className="flex motion-stagger flex-col gap-16">
           {summary.candidates.map((tally) => (
             <ResultRow
               key={tally.candidateId}

@@ -21,7 +21,7 @@ export default function SignInPage() {
   return (
     <VoterPageShell navbar={<VoterNavbar />} decorations="top-right">
       <OfflineBanner />
-      <div className="flex flex-1 flex-col lg:flex-row lg:items-center lg:gap-80 lg:page-gutter lg:py-64">
+      <div className="flex flex-1 motion-stagger flex-col lg:flex-row lg:items-center lg:gap-80 lg:page-gutter lg:py-64">
         <div className="flex flex-col gap-12 px-16 py-24 md:px-40 md:py-48 lg:flex-1 lg:gap-24 lg:p-0">
           <h1 className="text-heading-4 text-text-on-dark md:text-heading-2 lg:text-heading-1">
             {copy.title}
@@ -34,12 +34,17 @@ export default function SignInPage() {
             data-surface="light"
             className="relative mx-auto w-full max-w-520 rounded-xl bg-surface-card px-20 py-24 shadow-card md:p-32 lg:w-520"
           >
-            <Brace pose="hello" width={84} eager className="absolute -top-74 right-4 md:hidden" />
+            <Brace
+              pose="hello"
+              width={84}
+              eager
+              className="absolute -top-74 right-4 animate-pop-in motion-follow md:hidden"
+            />
             <Brace
               pose="hello"
               width={150}
               eager
-              className="absolute -top-150 -right-24 hidden md:block"
+              className="absolute -top-150 -right-24 hidden animate-pop-in motion-follow md:block"
             />
             <Suspense>
               <SignInForm />

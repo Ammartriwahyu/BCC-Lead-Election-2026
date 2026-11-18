@@ -19,12 +19,12 @@ export function WinnerRevealScreen({ turnout, candidateNumbers }: WinnerRevealSc
     <DisplayFrame brace={{ pose: 'woah', width: 300, className: 'top-666 left-1520' }}>
       <div className="flex flex-col items-center gap-48">
         <h1 className="text-center text-display-l text-text-on-dark">{copy.title}</h1>
-        <ul className="flex flex-wrap justify-center gap-64">
+        <ul className="flex motion-stagger flex-wrap justify-center gap-64">
           {candidateNumbers.map((number) => (
             <li key={number} className="flex flex-col items-center gap-16">
               <span
                 aria-hidden="true"
-                className="flex size-220 items-center justify-center rounded-full bg-primary-700 text-display-l text-primary-300"
+                className="flex size-220 animate-breathe items-center justify-center rounded-full bg-primary-700 text-display-l text-primary-300 motion-follow"
               >
                 {copy.hidden}
               </span>
