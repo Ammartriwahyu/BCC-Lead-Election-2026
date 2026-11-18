@@ -3,21 +3,25 @@
  * Read-only: never votes, never changes the voting state, the display or a candidate.
  *
  * Usage:
- *   pnpm contract:check https://staging-api.example.org      (backend origin; paths add /api)
+ *   pnpm contract:check https://pilketum.bccdev.id/staging   (backend base URL; paths add /api)
  *   pnpm contract:check --mock                               (the mock backend, demo accounts)
  *
- * Optional test accounts enable the signed-in checks (never real voters' passwords: ask the
- * backend team for test accounts):
- *   CONTRACT_VOTER_USERNAME / CONTRACT_VOTER_PASSWORD   (NIM or UB email, without 2FA)
+ * Optional test accounts enable the signed-in checks (never real voters' passwords: staging test
+ * accounts only). Read from the environment or from the git-ignored `.env.contract.local`:
+ *   CONTRACT_VOTER_USERNAME / CONTRACT_VOTER_PASSWORD   (a voter without 2FA)
  *   CONTRACT_ADMIN_USERNAME / CONTRACT_ADMIN_PASSWORD
  * Exit code 1 when any check fails.
  */
+import { existsSync } from 'node:fs';
+
 import {
   checkContract,
   type CheckOptions,
   type CheckResult,
   type Credentials,
 } from '../src/lib/api/contractCheck';
+
+const LOCAL_ENV_FILE = '.env.contract.local';
 
 function credentials(prefix: 'VOTER' | 'ADMIN'): Credentials | undefined {
   const username = process.env[`CONTRACT_${prefix}_USERNAME`];
@@ -40,10 +44,12 @@ async function options(args: readonly string[]): Promise<CheckOptions | null> {
   }
   const baseUrl = args.find((arg) => !arg.startsWith('-'));
   if (!baseUrl || !/^https?:\/\//.test(baseUrl)) return null;
+  // Values already in the environment win over the file.
+  if (existsSync(LOCAL_ENV_FILE)) process.loadEnvFile(LOCAL_ENV_FILE);
   const voter = credentials('VOTER');
   const admin = credentials('ADMIN');
   return {
-    baseUrl: baseUrl.replace(/\/$/, ''),
+    baseUrl: baseUrl.replace(/\/+$/, ''),
     ...(voter ? { voter } : {}),
     ...(admin ? { admin } : {}),
   };
