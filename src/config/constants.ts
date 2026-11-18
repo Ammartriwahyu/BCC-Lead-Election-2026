@@ -84,6 +84,8 @@ export const ADMIN = {
   exportFallbackName: 'pilketum-results.xlsx',
   /** Candidate toasts (spec 4.4: 3 seconds). */
   candidateToastMs: 3 * SECOND,
+  /** After the committee stream (/admin/stream) drops: poll, and try the stream again after this. */
+  streamRetryMs: 60 * SECOND,
 } as const;
 
 /** Candidate rules (backend doc + spec 4.4). The stricter limit of the two wins. */

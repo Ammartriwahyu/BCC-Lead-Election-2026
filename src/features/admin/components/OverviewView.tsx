@@ -13,7 +13,7 @@ import { useAdminResults } from '../useAdminResults';
 import { AdminLoadError } from './AdminLoadError';
 import { AdminPageHeader } from './AdminPageHeader';
 import { AdminPageSkeleton } from './AdminPageSkeleton';
-import { DisplayControlCard } from './DisplayControlCard';
+import { LazyDisplayControlCard } from './LazyDisplayControlCard';
 import { LazyElectionActionDialog } from './LazyElectionActionDialog';
 import { OverviewStats } from './OverviewStats';
 import { TurnoutCard } from './TurnoutCard';
@@ -77,7 +77,7 @@ export function OverviewView() {
       />
       <OverviewStats overview={overview.data} />
       {election.state === 'OPEN' ? <TurnoutCard turnout={turnout} /> : null}
-      <DisplayControlCard overview={overview.data} results={results.data?.results} />
+      <LazyDisplayControlCard overview={overview.data} results={results.data?.results} />
       <VotingStatusCard state={election.state} />
       <LazyElectionActionDialog
         action={dialogAction}

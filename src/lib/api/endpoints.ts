@@ -321,16 +321,19 @@ export async function getAdminMe(): Promise<AdminMe> {
   return toAdminMe(await call('getAdminMe', adminMeDtoSchema));
 }
 
+type AdminOverviewDto = z.output<typeof adminOverviewDtoSchema>;
+
+const toAdminOverview = (dto: AdminOverviewDto): AdminOverview => ({
+  election: toElection(dto),
+  turnout: toTurnout(dto.turnout),
+  candidateCount: dto.candidates,
+  display: { activeScreen: SCREEN[dto.display_screen] },
+  // Older backends without the field: voting has opened once if opened_at was ever set.
+  candidatesLocked: dto.candidates_locked ?? dto.opened_at !== null,
+});
+
 export async function getAdminOverview(): Promise<AdminOverview> {
-  const dto = await call('getAdminOverview', adminOverviewDtoSchema);
-  return {
-    election: toElection(dto),
-    turnout: toTurnout(dto.turnout),
-    candidateCount: dto.candidates,
-    display: { activeScreen: SCREEN[dto.display_screen] },
-    // Older backends without the field: voting has opened once if opened_at was ever set.
-    candidatesLocked: dto.candidates_locked ?? dto.opened_at !== null,
-  };
+  return toAdminOverview(await call('getAdminOverview', adminOverviewDtoSchema));
 }
 
 /** The status each action starts from, sent as `expected_status` so a stale click is refused. */
@@ -472,6 +475,35 @@ export async function getDisplay(signal?: AbortSignal): Promise<DisplayPayload> 
     ...(signal ? { signal } : {}),
   });
   return toDisplayPayload(dto);
+}
+
+/* ---------- committee stream ---------- */
+
+export interface AdminSubscription {
+  onOpen: () => void;
+  onOverview: (overview: AdminOverview) => void;
+  onError: () => void;
+}
+
+/**
+ * Live overview for the committee (`event: overview` on /admin/stream, the same body as
+ * GET /admin/overview), sent whenever the state, the turnout or the screen on air changes.
+ * Null without EventSource. A message that does not match the contract is dropped.
+ */
+export function subscribeAdmin(handlers: AdminSubscription): EventStreamHandle | null {
+  return openEventStream(API_ROUTES.streamAdmin.path, API_ROUTES.streamAdmin.event, {
+    onOpen: handlers.onOpen,
+    onEvent: (data) => {
+      let overview: AdminOverview;
+      try {
+        overview = toAdminOverview(adminOverviewDtoSchema.parse(JSON.parse(data)));
+      } catch {
+        return;
+      }
+      handlers.onOverview(overview);
+    },
+    onError: handlers.onError,
+  });
 }
 
 export const DISPLAY_STREAM_PATH = API_ROUTES.streamDisplay.path;

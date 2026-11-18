@@ -11,12 +11,17 @@ import { renderWithProviders } from '@/test/render';
 
 import { OverviewView } from './components/OverviewView';
 
+/** First lazy import of the Display control card in a test run. */
+const LAZY_LOAD_MS = 5_000;
+
 async function renderOverview(scenario: Parameters<typeof applyScenario>[0]) {
   applyScenario(scenario);
   await committeeSignIn();
   resetNavigation('/admin');
   const view = renderWithProviders(<OverviewView />);
   await screen.findByRole('heading', { level: 1, name: 'Overview' });
+  // Display control loads lazily (JS budget); the first import in a run is slow.
+  await screen.findByRole('heading', { name: 'Display control' }, { timeout: LAZY_LOAD_MS });
   return { ...view, user: userEvent.setup() };
 }
 

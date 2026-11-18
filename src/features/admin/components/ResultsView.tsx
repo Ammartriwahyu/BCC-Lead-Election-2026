@@ -16,8 +16,8 @@ import { useAdminResults } from '../useAdminResults';
 import { AdminLoadError } from './AdminLoadError';
 import { AdminPageHeader } from './AdminPageHeader';
 import { AdminPageSkeleton } from './AdminPageSkeleton';
-import { DisplayControlCard } from './DisplayControlCard';
 import { ExportResultsButton } from './ExportResultsButton';
+import { LazyDisplayControlCard } from './LazyDisplayControlCard';
 import { LazyElectionActionDialog } from './LazyElectionActionDialog';
 import { ResultRow } from './ResultRow';
 import { ResultsLockedDialog } from './ResultsLockedDialog';
@@ -121,7 +121,7 @@ export function ResultsView() {
             ))}
           </ol>
         ) : null}
-        <DisplayControlCard overview={overview.data} results={summary} />
+        <LazyDisplayControlCard overview={overview.data} results={summary} />
         {summary ? (
           <Alert tone="info">{open ? copy.liveNote : copy.note(formatNumber(counted))}</Alert>
         ) : null}

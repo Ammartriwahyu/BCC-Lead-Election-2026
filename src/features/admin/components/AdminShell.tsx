@@ -18,6 +18,7 @@ import { useAdminOverview } from '../useAdminOverview';
 import { useAdminSession } from '../useAdminSession';
 import { useAdminSignOut } from '../useAdminSignOut';
 import { AdminLoadError } from './AdminLoadError';
+import { AdminStreamProvider } from './AdminStreamProvider';
 import { ResultsLockedDialog } from './ResultsLockedDialog';
 
 const PAGE_NAMES: Record<AdminSection, string> = {
@@ -83,13 +84,16 @@ function ShellBody({ children }: { children: ReactNode }) {
 
 /**
  * Frame of every committee page (A1–A5): sidebar 263, content with the topbar, toasts for
- * conflicts, and the 401 handler that returns to committee sign-in.
+ * conflicts, the 401 handler that returns to committee sign-in, and one live connection
+ * (/admin/stream) shared by every page, with polling while it is down.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       <SessionExpiryListener signInRoute={ROUTES.adminSignIn} />
-      <ShellBody>{children}</ShellBody>
+      <AdminStreamProvider>
+        <ShellBody>{children}</ShellBody>
+      </AdminStreamProvider>
     </ToastProvider>
   );
 }

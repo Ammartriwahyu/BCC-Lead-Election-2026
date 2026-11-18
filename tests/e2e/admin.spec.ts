@@ -182,6 +182,37 @@ test.describe('voting state', () => {
   });
 });
 
+test.describe('live panel: one stream, polling only as a fallback', () => {
+  test('the overview follows a vote over /admin/stream without polling', async ({
+    page,
+    request,
+  }) => {
+    await applyScenario(request, 'open');
+    const overviewCalls = trackRequests(page, '/api/admin/overview');
+    const streams = trackRequests(page, '/api/admin/stream');
+    await adminSignIn(page);
+    await expect(statValue(page, 'Votes received')).toHaveText('1');
+    await expect.poll(() => streams.length).toBe(1);
+
+    // Pushed by the stream: well under the 4 s poll.
+    const before = overviewCalls.length;
+    await castVote(request);
+    await expect(statValue(page, 'Votes received')).toHaveText('2', { timeout: 2_000 });
+    // No polling while the stream is open (10 s would be 2–3 polls).
+    await page.waitForTimeout(10_000);
+    expect(overviewCalls.length - before).toBe(0);
+  });
+
+  test('without the stream the panel keeps polling', async ({ page, request }) => {
+    await applyScenario(request, 'open');
+    await page.route('**/api/admin/stream', (route) => route.abort());
+    await adminSignIn(page);
+    await expect(statValue(page, 'Votes received')).toHaveText('1');
+    await castVote(request);
+    await expect(statValue(page, 'Votes received')).toHaveText('2', { timeout: 6_000 });
+  });
+});
+
 test.describe('results: locked before voting opens, live while open', () => {
   test('sidebar and direct URL both explain the lock, and totals are never requested', async ({
     page,

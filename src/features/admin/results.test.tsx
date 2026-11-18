@@ -16,6 +16,9 @@ import { ResultsView } from './components/ResultsView';
 type Scenario = Parameters<typeof applyScenario>[0];
 type Data = Parameters<typeof applyScenario>[1];
 
+/** First lazy import of the Display control card in a test run. */
+const LAZY_LOAD_MS = 5_000;
+
 async function renderResults(scenario: Scenario, data?: Data) {
   applyScenario(scenario, data);
   await committeeSignIn();
@@ -64,7 +67,10 @@ describe('ResultsView (A4)', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Results' })).toBeInTheDocument();
     expect(screen.getByText('111 votes from 139 registered members.')).toBeInTheDocument();
     expect(screen.getByText(/^Shares are based on 111 valid votes\./)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Display control' })).toBeInTheDocument();
+    // Loads lazily (JS budget).
+    expect(
+      await screen.findByRole('heading', { name: 'Display control' }, { timeout: LAZY_LOAD_MS }),
+    ).toBeInTheDocument();
   });
 
   it('tie: every candidate on the top count is marked, none is singled out', async () => {
