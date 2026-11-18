@@ -132,15 +132,15 @@ describe('AdminShell', () => {
     );
   });
 
-  it('keeps Results locked until voting closes and explains why', async () => {
-    applyScenario('open');
+  it('keeps Results locked until voting opens and explains why', async () => {
+    applyScenario('not-started');
     await committeeSignIn();
     resetNavigation('/admin');
     renderWithProviders(shell);
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: /^Results, locked/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Results are locked' });
-    expect(dialog).toHaveTextContent('Candidate totals unlock after voting closes.');
+    expect(dialog).toHaveTextContent('Candidate totals unlock once voting opens.');
     await user.click(within(dialog).getByRole('button', { name: 'OK' }));
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

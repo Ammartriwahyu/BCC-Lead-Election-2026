@@ -36,7 +36,7 @@ const NEXT_ACTION: Record<ElectionState, ElectionAction> = {
 export function OverviewView() {
   const overview = useAdminOverview();
   const state = overview.data?.election.state;
-  const results = useAdminResults(state);
+  const results = useAdminResults(state, 'final');
   const [dialogOpen, setDialogOpen] = useState(false);
   // The action is fixed when the dialog opens, so its text cannot switch while it closes.
   const [dialogAction, setDialogAction] = useState<ElectionAction>('open');

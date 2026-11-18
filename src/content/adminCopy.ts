@@ -8,7 +8,7 @@ export const adminNavCopy = {
   candidates: 'Candidates',
   voters: 'Voter list',
   results: 'Results',
-  resultsLocked: 'locked until voting closes', // NEW: screen-reader text for the lock icon
+  resultsLocked: 'locked until voting opens', // NEW: screen-reader text for the lock icon
   signOut: 'Sign out',
   openMenu: 'Open menu', // NEW: drawer toggle below 1024 px
   closeMenu: 'Close menu', // NEW
@@ -104,7 +104,8 @@ export const adminCopy = {
     },
     resultsLocked: {
       title: 'Results are locked',
-      body: 'Candidate totals unlock after voting closes. This keeps the count private while members are still voting.',
+      // Changed (DEVIATIONS #86): totals are live for the committee once voting opens.
+      body: 'Candidate totals unlock once voting opens. Until then there are no votes to count.',
       confirm: 'OK',
     },
   },
@@ -204,6 +205,13 @@ export const adminCopy = {
     title: 'Results',
     subtitle: (count: number, votes: string, registered: string) =>
       `${votes} ${count === 1 ? 'vote' : 'votes'} from ${registered} registered members.`,
+    // NEW (DEVIATIONS #86): live count while voting is open.
+    liveSubtitle: (count: number, votes: string, registered: string) =>
+      `${votes} ${count === 1 ? 'vote' : 'votes'} so far from ${registered} registered members. Updates live.`,
+    liveNote:
+      'Live count for the committee only. The display and the export show results after voting closes.',
+    liveUnavailable:
+      'Live results are not available yet: the server shares totals once voting closes.',
     votes: (count: number, formatted: string) => `${formatted} ${count === 1 ? 'vote' : 'votes'}`,
     listLabel: 'Results by candidate', // NEW: accessible name of the list
     leading: 'Most votes', // NEW: screen-reader text on the leading row

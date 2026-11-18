@@ -4,7 +4,11 @@ Status after the backend doc "API Pilketum BCC" (17 Nov 2026) and the backend te
 
 ## Open
 
-None. Every question below was answered by the backend team on 18 Nov 2026 ("Jawaban Tim Backend"; their doc `docs/ini doks.md` in `bccfilkom/pilketum` was updated to match).
+| #   | Request                                                                                                                                                                                                                                                                                                                                                                                                                | Frontend does now                                                                        | Until it is done                                                                                                                            | Priority |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 14  | Committee decision (18 Nov 2026): the committee follows the count live while voting is open. Can `GET /api/admin/results` answer `200` while `status = open` (same body; committee token only)? `/api/display` result screens, `PUT /api/admin/display` result screens and `/api/admin/results/export` stay `RESULTS_LOCKED` until `closed`. Optional: a `results` SSE event on `/api/admin/stream` instead of polling | Results page polls `GET /admin/results` every 3 s while open; the mock already allows it | On a `409 RESULTS_LOCKED` while open the page says "Live results are not available yet" and stops polling; totals appear once voting closes | High     |
+
+Questions #1–13 were answered by the backend team on 18 Nov 2026 ("Jawaban Tim Backend"; their doc `docs/ini doks.md` in `bccfilkom/pilketum` was updated to match).
 
 ## Answered 18 Nov 2026
 

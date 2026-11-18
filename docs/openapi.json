@@ -3431,7 +3431,7 @@
     "/admin/results": {
       "get": {
         "operationId": "getAdminResults",
-        "summary": "Votes per candidate, leaders, ties, integrity check. Only while closed",
+        "summary": "Votes per candidate, leaders, ties, integrity check. Live while open, final once closed (committee only)",
         "tags": [
           "committee"
         ],

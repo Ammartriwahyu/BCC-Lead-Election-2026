@@ -667,8 +667,9 @@ export const handlers = [
     const db = getDb();
     const auth = authorize(db, request, ['admin']);
     if (isResponse(auth)) return auth;
-    // Candidate totals never leave the server while voting is not closed.
-    if (db.status !== 'closed') return error(409, 'RESULTS_LOCKED');
+    // Totals per candidate for the committee once voting has opened: live while open, final
+    // once closed (requested from the backend, BACKEND_QUESTIONS #14). Never before opening.
+    if (db.status === 'not_started') return error(409, 'RESULTS_LOCKED');
     const candidates = resultRows(db);
     const total = totalBallots(db);
     return HttpResponse.json({

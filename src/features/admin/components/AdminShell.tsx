@@ -56,8 +56,10 @@ function ShellBody({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col bg-bg-page lg:flex-row">
       <AdminSidebar
         active={section}
-        // Locked until the backend says CLOSED, also while the state is still loading.
-        resultsLocked={overview.data?.election.state !== 'CLOSED'}
+        // Locked until voting has opened (live totals), also while the state is still loading.
+        resultsLocked={
+          overview.data?.election.state !== 'OPEN' && overview.data?.election.state !== 'CLOSED'
+        }
         onResultsLocked={() => {
           setLockedOpen(true);
         }}

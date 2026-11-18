@@ -321,6 +321,10 @@ async function checkAdmin(checker: Checker, admin: Credentials): Promise<void> {
   } else if (state.data.status === 'closed') {
     await checker.expectOk('getAdminResults', { token });
     await checker.expectOk('exportResults', { token });
+  } else if (state.data.status === 'open') {
+    // Live totals for the committee while open; the export still waits for closing.
+    await checker.expectOk('getAdminResults', { token });
+    await checker.expectError('exportResults', 'RESULTS_LOCKED', { token });
   } else {
     await checker.expectError('getAdminResults', 'RESULTS_LOCKED', { token });
     await checker.expectError('exportResults', 'RESULTS_LOCKED', { token });

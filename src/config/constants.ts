@@ -12,6 +12,8 @@ export const POLLING = {
   electionStateMs: 5 * SECOND,
   /** Admin overview live turnout. Spec target: <= 5 s delay. */
   adminOverviewMs: 4 * SECOND,
+  /** Admin Results page while voting is open: live totals per candidate (DEVIATIONS #86). */
+  adminLiveResultsMs: 3 * SECOND,
   /** Public display fallback when no stream is available. */
   displayMs: 3 * SECOND,
 } as const;

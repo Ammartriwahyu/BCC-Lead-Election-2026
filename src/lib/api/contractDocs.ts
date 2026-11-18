@@ -23,7 +23,8 @@ export const ENDPOINT_SUMMARIES: Record<EndpointName, string> = {
   setDisplayScreen: 'Puts a result screen on the public display. Only while closed',
   previewDisplay: 'Payload of a screen without putting it on air',
   getAdminVoters: 'Voter list page. search matches name, email or NIM',
-  getAdminResults: 'Votes per candidate, leaders, ties, integrity check. Only while closed',
+  getAdminResults:
+    'Votes per candidate, leaders, ties, integrity check. Live while open, final once closed (committee only)',
   exportResults: 'Excel file (Summary, Results, Voters). Only while closed',
   getAdminCandidates: 'All candidates (same as GET /candidates)',
   getAdminCandidate: 'One candidate',
