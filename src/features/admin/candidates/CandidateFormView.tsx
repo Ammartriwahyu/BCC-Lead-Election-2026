@@ -24,7 +24,7 @@ export function CandidateFormView({ id }: { id: string | null }) {
   const candidate = id ? one : null;
 
   const locked = overview.data
-    ? overview.data.election.state !== 'NOT_STARTED' || overview.data.everOpened
+    ? overview.data.election.state !== 'NOT_STARTED' || overview.data.candidatesLocked
     : false;
   useEffect(() => {
     if (locked) router.replace(ROUTES.adminCandidates);

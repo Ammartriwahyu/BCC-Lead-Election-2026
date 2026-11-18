@@ -9,6 +9,12 @@ export const DEMO_PASSWORD = {
   committee: 'committee2026',
 } as const;
 
+/** Vote time of members who voted before the scenario starts (10:24 WIB, as in Figma V5). */
+export const PRE_VOTED_AT = '2026-11-20T03:24:00.000Z';
+
+/** Committee name for the topbar (backend default). */
+export const COMMITTEE_DISPLAY_NAME = 'Election Committee';
+
 /** Voters sign in with NIM or email (UB SSO); the committee with a username. */
 export const DEMO_ACCOUNTS = {
   voter: 'voter@bcc.test',
@@ -51,11 +57,20 @@ export interface MemberFixture {
 export interface CommitteeFixture {
   username: string;
   password: string;
+  displayName: string;
 }
 
 export const COMMITTEE: CommitteeFixture[] = [
-  { username: DEMO_ACCOUNTS.committee, password: DEMO_PASSWORD.committee },
-  { username: DEMO_ACCOUNTS.committee2, password: DEMO_PASSWORD.committee },
+  {
+    username: DEMO_ACCOUNTS.committee,
+    password: DEMO_PASSWORD.committee,
+    displayName: COMMITTEE_DISPLAY_NAME,
+  },
+  {
+    username: DEMO_ACCOUNTS.committee2,
+    password: DEMO_PASSWORD.committee,
+    displayName: COMMITTEE_DISPLAY_NAME,
+  },
 ];
 
 export const MAJORS = [

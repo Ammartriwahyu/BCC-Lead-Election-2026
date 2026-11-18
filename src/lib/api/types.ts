@@ -45,7 +45,7 @@ export interface VoterMe {
   name: string;
   email: string | null;
   status: VoterStatus;
-  /** Only known on this device right after submitting (the API sends no vote time). */
+  /** When the ballot was cast (backend `voted_at`), or this device's time right after submitting. */
   submittedAt: Date | null;
 }
 
@@ -96,6 +96,8 @@ export interface VoteReceipt {
 
 export interface AdminMe {
   username: string;
+  /** Shown in the topbar ("Election Committee"); the username when the backend sends none. */
+  displayName: string;
 }
 
 export interface DisplayControl {
@@ -115,8 +117,8 @@ export interface AdminOverview {
   turnout: Turnout;
   candidateCount: number;
   display: DisplayControl;
-  /** Voting has opened at least once: candidates and the register are locked for good. */
-  everOpened: boolean;
+  /** Voting has opened at least once: candidates are locked for good (backend `candidates_locked`). */
+  candidatesLocked: boolean;
 }
 
 export interface AdminVoter {

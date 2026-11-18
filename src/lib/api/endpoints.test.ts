@@ -4,7 +4,13 @@
  */
 import { http, HttpResponse } from 'msw';
 
-import { DEMO_ACCOUNTS, DEMO_OTP_CODE, DEMO_PASSWORD } from '@/mocks/fixtures';
+import {
+  COMMITTEE_DISPLAY_NAME,
+  DEMO_ACCOUNTS,
+  DEMO_OTP_CODE,
+  DEMO_PASSWORD,
+  PRE_VOTED_AT,
+} from '@/mocks/fixtures';
 import { MOCK_RATE_LIMIT, route } from '@/mocks/handlers';
 import { server } from '@/mocks/node';
 import { applyScenario } from '@/mocks/scenarios';
@@ -169,9 +175,10 @@ describe('voter sign-in', () => {
     await expect(getMe()).resolves.toMatchObject({ email: DEMO_ACCOUNTS.otp });
   });
 
-  it('reports the voted status for voted@bcc.test (no vote time from the API)', async () => {
+  it('reports the voted status and the vote time (voted_at) for voted@bcc.test', async () => {
     const voted = await signInVoter(DEMO_ACCOUNTS.voted);
-    expect(voted.voter).toMatchObject({ status: 'VOTED', submittedAt: null });
+    expect(voted.voter).toMatchObject({ status: 'VOTED', submittedAt: new Date(PRE_VOTED_AT) });
+    await expect(getMe()).resolves.toMatchObject({ submittedAt: new Date(PRE_VOTED_AT) });
   });
 
   it('requires a session for /me and candidates, and ends it on sign-out', async () => {
@@ -253,15 +260,14 @@ describe('committee', () => {
     });
     await signInVoter();
     await expect(getAdminOverview()).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
-    await expect(adminSignIn(ADMIN.username, ADMIN.password)).resolves.toEqual({
-      username: ADMIN.username,
-    });
-    await expect(getAdminMe()).resolves.toEqual({ username: ADMIN.username });
+    const me = { username: ADMIN.username, displayName: COMMITTEE_DISPLAY_NAME };
+    await expect(adminSignIn(ADMIN.username, ADMIN.password)).resolves.toEqual(me);
+    await expect(getAdminMe()).resolves.toEqual(me);
   });
 
   it('opens, closes and reopens; a stale action is a STATE_CONFLICT', async () => {
     await adminSignIn(ADMIN.username, ADMIN.password);
-    expect((await getAdminOverview()).everOpened).toBe(false);
+    expect((await getAdminOverview()).candidatesLocked).toBe(false);
     await expect(changeElectionState('open')).resolves.toEqual({ state: 'OPEN' });
     // A second committee member clicking Open on a stale page.
     await expect(changeElectionState('open')).rejects.toMatchObject({ code: 'STATE_CONFLICT' });
@@ -269,7 +275,7 @@ describe('committee', () => {
     await expect(changeElectionState('reopen')).resolves.toEqual({ state: 'OPEN' });
     const overview = await getAdminOverview();
     expect(overview).toMatchObject({
-      everOpened: true,
+      candidatesLocked: true,
       display: { activeScreen: 'VOTING_OPEN' },
     });
   });
@@ -340,6 +346,31 @@ describe('committee', () => {
       display: { activeScreen: 'FINAL_RESULTS' },
     });
     await expect(setDisplayScreen('VOTING_OPEN')).rejects.toThrow(/follows the voting status/);
+  });
+
+  it('refuses a screen change made on a stale page (expected_screen)', async () => {
+    applyScenario('closed');
+    await adminSignIn(ADMIN.username, ADMIN.password);
+    // Another committee member already put Final results on air.
+    await setDisplayScreen('FINAL_RESULTS', 'VOTING_CLOSED');
+    await expect(setDisplayScreen('MOST_VOTES', 'VOTING_CLOSED')).rejects.toMatchObject({
+      code: 'STATE_CONFLICT',
+    });
+    await expect(setDisplayScreen('MOST_VOTES', 'FINAL_RESULTS')).resolves.toEqual({
+      activeScreen: 'MOST_VOTES',
+    });
+  });
+
+  it('sends expected_status with every voting action', async () => {
+    applyScenario('open');
+    await adminSignIn(ADMIN.username, ADMIN.password);
+    let sent: unknown;
+    server.events.on('request:start', ({ request }) => {
+      if (request.url.includes('/admin/election/')) sent = request.clone().json();
+    });
+    await changeElectionState('close');
+    server.events.removeAllListeners('request:start');
+    await expect(sent).resolves.toEqual({ expected_status: 'open' });
   });
 });
 

@@ -104,7 +104,7 @@ export const toVoterMe = (dto: VoterDto): VoterMe => ({
   name: dto.name,
   email: dto.email,
   status: dto.has_voted ? 'VOTED' : 'NOT_VOTED',
-  submittedAt: null,
+  submittedAt: dto.has_voted && dto.voted_at ? new Date(dto.voted_at) : null,
 });
 
 export const toCandidate = (dto: CandidateDto): Candidate => ({
@@ -300,12 +300,17 @@ export async function submitVote(candidateId: string): Promise<VoteReceipt> {
 
 /* ---------- committee ---------- */
 
+const toAdminMe = (dto: { username: string; display_name?: string | undefined }): AdminMe => ({
+  username: dto.username,
+  displayName: dto.display_name?.trim() || dto.username,
+});
+
 export async function adminSignIn(username: string, password: string): Promise<AdminMe> {
   const dto = await call('adminSignIn', adminSessionDtoSchema, {
     body: { username, password },
     skipAuthRedirect: true,
   });
-  return { username: dto.username };
+  return toAdminMe(dto);
 }
 
 export async function adminSignOut(): Promise<void> {
@@ -313,7 +318,7 @@ export async function adminSignOut(): Promise<void> {
 }
 
 export async function getAdminMe(): Promise<AdminMe> {
-  return { username: (await call('getAdminMe', adminMeDtoSchema)).username };
+  return toAdminMe(await call('getAdminMe', adminMeDtoSchema));
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
@@ -323,13 +328,24 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     turnout: toTurnout(dto.turnout),
     candidateCount: dto.candidates,
     display: { activeScreen: SCREEN[dto.display_screen] },
-    everOpened: dto.opened_at !== null,
+    // Older backends without the field: voting has opened once if opened_at was ever set.
+    candidatesLocked: dto.candidates_locked ?? dto.opened_at !== null,
   };
 }
 
+/** The status each action starts from, sent as `expected_status` so a stale click is refused. */
+const ACTION_FROM: Record<ElectionAction, ElectionStatusDto> = {
+  open: 'not_started',
+  close: 'open',
+  reopen: 'closed',
+};
+
 export async function changeElectionState(action: ElectionAction): Promise<Election> {
   return toElection(
-    await call('changeElectionState', electionStateDtoSchema, { params: { action } }),
+    await call('changeElectionState', electionStateDtoSchema, {
+      params: { action },
+      body: { expected_status: ACTION_FROM[action] },
+    }),
   );
 }
 
@@ -374,12 +390,25 @@ export async function getAdminResults(): Promise<AdminResults> {
   };
 }
 
-/** Only result screens can be chosen; the others follow the voting status. */
-export async function setDisplayScreen(screen: DisplayScreen): Promise<DisplayControl> {
+const SCREEN_WIRE = Object.fromEntries(
+  Object.entries(SCREEN).map(([wire, screen]) => [screen, wire]),
+) as Record<DisplayScreen, DisplayScreenDto>;
+
+/**
+ * Only result screens can be chosen; the others follow the voting status. `expected` is the screen
+ * this committee member saw on air: if someone else changed it meanwhile the backend refuses
+ * (DISPLAY_CHANGED -> STATE_CONFLICT) instead of overwriting their choice.
+ */
+export async function setDisplayScreen(
+  screen: DisplayScreen,
+  expected?: DisplayScreen,
+): Promise<DisplayControl> {
   const wire = SCREEN_DTO[screen];
   if (!wire) throw new Error(`Screen ${screen} follows the voting status and cannot be chosen`);
-  await call('setDisplayScreen', displayChangeDtoSchema, { body: { screen: wire } });
-  return { activeScreen: screen };
+  const dto = await call('setDisplayScreen', displayChangeDtoSchema, {
+    body: { screen: wire, ...(expected ? { expected_screen: SCREEN_WIRE[expected] } : {}) },
+  });
+  return { activeScreen: SCREEN[dto.display_screen] };
 }
 
 export async function exportResults(): Promise<ExportFile> {

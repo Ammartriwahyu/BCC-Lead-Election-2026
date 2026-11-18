@@ -97,7 +97,7 @@ function ScreenRow({ screen, status, thumbnail, onShow }: RowProps) {
 export function DisplayControlCard({ overview, results }: DisplayControlCardProps) {
   const { election, turnout, display } = overview;
   const mutation = useSetDisplayScreen();
-  // One change at a time: the next one needs the version this one returns.
+  // One change at a time: the next one must expect the screen this one puts on air.
   const inFlight = useRef(false);
 
   return (
@@ -125,7 +125,7 @@ export function DisplayControlCard({ overview, results }: DisplayControlCardProp
               if (inFlight.current) return;
               inFlight.current = true;
               mutation.mutate(
-                { screen },
+                { screen, expected: display.activeScreen },
                 {
                   onSettled: () => {
                     inFlight.current = false;
