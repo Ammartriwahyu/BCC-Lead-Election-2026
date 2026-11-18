@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 /**
  * Zod 4 probes `new Function` to decide whether it may JIT-compile parsers. Our CSP forbids eval,

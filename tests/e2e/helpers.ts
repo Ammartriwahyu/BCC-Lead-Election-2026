@@ -13,9 +13,12 @@ export type Scenario =
   | 'tie';
 
 export interface ScenarioData {
-  candidateSet?: 'default' | 'one' | 'six' | 'long';
+  candidateSet?: 'default' | 'none' | 'missing-photo' | 'one' | 'six' | 'long';
   voterCount?: number;
 }
+
+/** Default data: a scenario without options always starts from these (options stick otherwise). */
+const DEFAULT_DATA: Required<ScenarioData> = { candidateSet: 'default', voterCount: 139 };
 
 /** Resets the shared mock database to a scenario. Every spec starts with this. */
 export async function applyScenario(
@@ -24,13 +27,14 @@ export async function applyScenario(
   data?: ScenarioData,
 ): Promise<void> {
   const response = await request.post('/api/__mock/scenario', {
-    data: { scenario, ...(data ? { data } : {}) },
+    data: { scenario, data: { ...DEFAULT_DATA, ...data } },
   });
   if (!response.ok()) throw new Error(`applyScenario(${scenario}) failed: ${response.status()}`);
 }
 
 export interface MockState {
-  election: { state: string; version: number };
+  status: 'not_started' | 'open' | 'closed';
+  displayScreen: string;
   registeredVoters: number;
   votesReceived: number;
   voteRequests: number;
@@ -40,11 +44,31 @@ export async function getMockState(request: APIRequestContext): Promise<MockStat
   return (await (await request.get('/api/__mock/state')).json()) as MockState;
 }
 
+/** Demo accounts of the mock backend. Voters sign in with NIM or email, the committee by username. */
 export const ACCOUNTS = {
-  voter: { email: 'voter@bcc.test', password: 'pilketum2026' },
-  voter2: { email: 'voter2@bcc.test', password: 'pilketum2026' },
-  voted: { email: 'voted@bcc.test', password: 'pilketum2026' },
-  guest: { email: 'guest@bcc.test', password: 'pilketum2026' },
-  committee: { email: 'committee@bcc.test', password: 'committee2026' },
-  committee2: { email: 'committee2@bcc.test', password: 'committee2026' },
+  voter: { username: 'voter@bcc.test', password: 'pilketum2026' },
+  voterNim: { username: '235150200111001', password: 'pilketum2026' },
+  voter2: { username: 'voter2@bcc.test', password: 'pilketum2026' },
+  voted: { username: 'voted@bcc.test', password: 'pilketum2026' },
+  guest: { username: 'guest@bcc.test', password: 'pilketum2026' },
+  otp: { username: 'otp@bcc.test', password: 'pilketum2026' },
+  ssoDown: { username: 'sso-down@bcc.test', password: 'pilketum2026' },
+  committee: { username: 'committee', password: 'committee2026' },
+  committee2: { username: 'committee2', password: 'committee2026' },
 } as const;
+
+/** Code the mock accepts for the 2FA demo account. */
+export const DEMO_OTP_CODE = '246810';
+
+export interface Account {
+  username: string;
+  password: string;
+}
+
+/** Domain screen names (data-screen on /display) -> what PUT /admin/display takes. */
+export const SCREEN_WIRE: Record<string, string> = {
+  VOTING_CLOSED: 'voting_closed',
+  WINNER_REVEAL: 'winner_suspense',
+  FINAL_RESULTS: 'final_results',
+  MOST_VOTES: 'most_votes',
+};

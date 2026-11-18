@@ -23,7 +23,10 @@
     "e2e:ui": "playwright test --ui",
     "tokens": "tsx scripts/build-tokens.ts",
     "check:bundle": "node scripts/check-bundle.mjs",
-    "lhci": "lhci autorun && lhci autorun --collect.settings.preset=desktop",
+    "check:js": "node scripts/check-js-budget.mjs",
+    "contract:openapi": "tsx scripts/build-openapi.ts",
+    "contract:check": "tsx scripts/check-backend.ts",
+    "lhci": "lhci autorun --collect.url=http://localhost:4320/sign-in && lhci autorun --collect.settings.preset=desktop",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"

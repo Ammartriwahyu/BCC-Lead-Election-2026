@@ -3,12 +3,13 @@
  * or POST /api/__mock/scenario { scenario, data? }.
  */
 import {
-  findMemberByEmail,
+  findMember,
   getDb,
+  recordVote,
   resetDb,
   seedVoteCounts,
   seedVotes,
-  setElectionState,
+  setElectionStatus,
   voterCount,
   type DataOptions,
   type MockDb,
@@ -39,51 +40,46 @@ export function applyScenario(name: ScenarioName, data: Partial<DataOptions> = {
     case 'not-started':
       break;
     case 'open':
-      setElectionState(db, 'OPEN');
+      setElectionStatus(db, 'open');
       break;
     case 'closed':
       seedDefault(db);
-      setElectionState(db, 'CLOSED');
+      setElectionStatus(db, 'closed');
       break;
     case 'already-voted': {
-      setElectionState(db, 'OPEN');
-      const voter = findMemberByEmail(db, DEMO_ACCOUNTS.voter);
+      setElectionStatus(db, 'open');
+      const voter = findMember(db, DEMO_ACCOUNTS.voter);
       const first = db.candidates[0];
-      if (voter && first) {
-        voter.status = 'VOTED';
-        voter.submittedAt = new Date().toISOString();
-        db.tallies.set(first.id, (db.tallies.get(first.id) ?? 0) + 1);
-      }
+      if (voter && first) recordVote(db, voter, first.id);
       break;
     }
     case 'submit-fails':
-      setElectionState(db, 'OPEN');
+      setElectionStatus(db, 'open');
       db.submitFault = 'fail-once';
       break;
     case 'submit-lost-response':
-      setElectionState(db, 'OPEN');
+      setElectionStatus(db, 'open');
       db.submitFault = 'lost-response-once';
       break;
     case 'closed-mid-vote':
-      setElectionState(db, 'OPEN');
+      setElectionStatus(db, 'open');
       db.submitFault = 'close-on-submit';
       break;
     case 'reopen':
       seedDefault(db);
-      setElectionState(db, 'CLOSED');
+      setElectionStatus(db, 'closed');
       db.pendingTimer = setTimeout(() => {
         const live = getDb();
-        if (live === db && live.election.state === 'CLOSED') setElectionState(live, 'OPEN');
+        if (live === db && live.status === 'closed') setElectionStatus(live, 'open');
         db.pendingTimer = null;
       }, REOPEN_DELAY_MS);
       break;
     case 'zero-votes':
       db.tallies.forEach((_, key) => db.tallies.set(key, 0));
       db.members.forEach((m) => {
-        m.status = 'NOT_VOTED';
-        m.submittedAt = null;
+        m.hasVoted = false;
       });
-      setElectionState(db, 'CLOSED');
+      setElectionStatus(db, 'closed');
       break;
     case 'tie': {
       // Exact tie on top between candidates 1 and 2 (voted@ already gave candidate 1 one vote).
@@ -95,7 +91,7 @@ export function applyScenario(name: ScenarioName, data: Partial<DataOptions> = {
           Math.max(0, Math.floor((total - 2 * top) / Math.max(1, db.candidates.length - 2))),
         );
       seedVoteCounts(db, [top - 1, top, ...others]);
-      setElectionState(db, 'CLOSED');
+      setElectionStatus(db, 'closed');
       break;
     }
   }

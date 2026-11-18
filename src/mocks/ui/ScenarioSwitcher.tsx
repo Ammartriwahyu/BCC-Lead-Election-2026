@@ -27,7 +27,7 @@ const COPY = {
   reset: 'Reset demo data',
   close: 'Close',
   state: (s: MockState) =>
-    `State ${s.election.state} · ${s.votesReceived}/${s.registeredVoters} voted · ${s.voteRequests} vote requests`,
+    `State ${s.status} · screen ${s.displayScreen} · ${s.votesReceived}/${s.registeredVoters} voted · ${s.voteRequests} vote requests`,
 } as const;
 
 const PARAM = { scenario: 'scenario', candidates: 'candidates', voters: 'voters' } as const;

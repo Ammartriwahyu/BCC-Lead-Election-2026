@@ -3,11 +3,11 @@
  * (spec §10 "Visual & responsif"). Screenshots land in test-results/visual/.
  * Also asserts: no horizontal scroll and no serious axe violations on each screen.
  */
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
 
 import { applyScenario } from '../e2e/helpers';
 import { reviewButton, signIn } from '../e2e/voter-helpers';
+import { expect, test, type Page } from '../fixtures';
+import { checkScreen } from './checks';
 
 const WIDTHS = [360, 390, 768, 1024, 1280, 1512] as const;
 const HEIGHT = 900;
@@ -17,20 +17,8 @@ test.skip(
   'Visual baseline is captured in Chromium',
 );
 
-async function check(page: Page, name: string, width: number) {
-  await page.waitForLoadState('networkidle');
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - window.innerWidth,
-  );
-  expect(overflow, `${name} @${width}: horizontal scroll`).toBeLessThanOrEqual(0);
-  await page.screenshot({ path: `test-results/visual/${name}-${width}.png`, fullPage: true });
-  const axe = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze();
-  const serious = axe.violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
-  expect(serious, `${name} @${width}: axe`).toEqual([]);
+function check(page: Page, name: string, width: number) {
+  return checkScreen(page, `${name}-${width}`);
 }
 
 for (const width of WIDTHS) {
@@ -42,9 +30,15 @@ for (const width of WIDTHS) {
       await page.goto('/sign-in');
       await expect(page.getByTestId('election-status')).toBeVisible();
       await check(page, 'V0b-sign-in-open', width);
-      await signIn(page, { email: 'voter@bcc.test', password: 'nope' });
+      await signIn(page, { username: 'voter@bcc.test', password: 'nope' });
       await expect(page.getByRole('alert').filter({ hasText: 'match' })).toBeVisible();
       await check(page, 'V0d-sign-in-error', width);
+      // Two-step verification (no Figma frame, DEVIATIONS).
+      await signIn(page, { username: 'otp@bcc.test', password: 'pilketum2026' });
+      await expect(
+        page.getByRole('heading', { name: 'Enter your verification code' }),
+      ).toBeVisible();
+      await check(page, 'V0e-sign-in-code', width);
     });
 
     test('candidates not started + vision & mission', async ({ page, request }) => {
@@ -52,7 +46,7 @@ for (const width of WIDTHS) {
       await signIn(page);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText("Voting hasn't opened yet");
       await check(page, 'V1-candidates-not-started', width);
-      await page.goto('/candidates/cand-01');
+      await page.goto('/candidates/1');
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Candidate Name 01');
       await check(page, 'V1-vision-mission-not-started', width);
     });
@@ -71,7 +65,7 @@ for (const width of WIDTHS) {
       await page.waitForTimeout(400);
       await page.screenshot({ path: `test-results/visual/O-confirm-${width}.png` });
       await page.keyboard.press('Escape');
-      await page.goto('/candidates/cand-01');
+      await page.goto('/candidates/1');
       await check(page, 'V3-vision-mission', width);
     });
 
@@ -94,7 +88,7 @@ for (const width of WIDTHS) {
 
       await applyScenario(request, 'open');
       await page.goto('/sign-in');
-      await signIn(page, { email: 'voted@bcc.test', password: 'pilketum2026' });
+      await signIn(page, { username: 'voted@bcc.test', password: 'pilketum2026' });
       await expect(page).toHaveURL(/\/already-voted$/);
       await check(page, 'V5b-already-voted', width);
     });

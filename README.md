@@ -8,7 +8,7 @@ E-voting website for the **BCC Chairperson Election 2026** (Basic Computing Comm
 
 The backend is built in a separate repo. Until it exists, the app runs on a **mock API** that lives inside the Next server, so every tab, booth device and the display share the same data.
 
-> Status: Phases 1–3 done (setup, foundation, voter flow). Admin panel and `/display` come next. See `docs/PLAN.md`.
+> Status: Phases 1–8 done. The frontend speaks the real backend API (doc "API Pilketum BCC") through a server-side BFF, including the committee Candidates pages, two-step sign-in and the results export. Going live: `docs/INTEGRATION.md`; open points: `docs/BACKEND_QUESTIONS.md`. QA results: `docs/QA_REPORT.md`.
 
 ## Requirements
 
@@ -27,21 +27,23 @@ Open <http://localhost:3000>. To try it on booth devices on the same network, ru
 
 ### Demo accounts (mock API only)
 
-| Role              | Email                 | Password        | Behaviour                                  |
-| ----------------- | --------------------- | --------------- | ------------------------------------------ |
-| Voter (not voted) | `voter@bcc.test`      | `pilketum2026`  | Normal flow for the current election state |
-| Second voter      | `voter2@bcc.test`     | `pilketum2026`  | For booth hand-over tests                  |
-| Already voted     | `voted@bcc.test`      | `pilketum2026`  | Goes to "You've already voted"             |
-| Not a voter       | `guest@bcc.test`      | `pilketum2026`  | "This email isn't on the voter register."  |
-| Wrong password    | any voter email       | anything else   | "That email and password don't match…"     |
-| Committee         | `committee@bcc.test`  | `committee2026` | Admin panel                                |
-| Second committee  | `committee2@bcc.test` | `committee2026` | For two-admin conflict tests               |
+| Role                  | Sign in with                              | Password        | Behaviour                                                      |
+| --------------------- | ----------------------------------------- | --------------- | -------------------------------------------------------------- |
+| Voter (not voted)     | `voter@bcc.test` or NIM `235150200111001` | `pilketum2026`  | Normal flow for the current election state                     |
+| Second voter          | `voter2@bcc.test`                         | `pilketum2026`  | For booth hand-over tests                                      |
+| Already voted         | `voted@bcc.test`                          | `pilketum2026`  | Goes to "You've already voted"                                 |
+| Not on the register   | `guest@bcc.test`                          | `pilketum2026`  | "This account isn't on the voter register."                    |
+| Two-step verification | `otp@bcc.test`                            | `pilketum2026`  | Asks for a code: `246810`                                      |
+| UB SSO down / busy    | `sso-down@bcc.test` / `sso-busy@bcc.test` | anything        | SSO banners                                                    |
+| Wrong password        | any voter                                 | anything else   | "That NIM or email and password don't match…"; 5× → rate limit |
+| Committee             | `committee`                               | `committee2026` | Admin panel                                                    |
+| Second committee      | `committee2`                              | `committee2026` | For two-admin conflict tests                                   |
 
 These accounts exist only in `src/mocks/fixtures.ts` and are compiled out of production builds (`pnpm build && pnpm check:bundle` proves it).
 
 ### Scenario switcher
 
-In mock builds a small **Mock** button sits in the bottom-left corner (hidden on `/display`). It can switch scenario, candidate set (1, 3, 6, long names), voter count (139 or 1,000) and **Reset demo data**.
+In mock builds a small **Mock** button sits in the bottom-left corner (hidden on `/display`). It can switch scenario, candidate set (none, 1, 3, 3 with a missing photo, 6, long names), voter count (139 or 1,000) and **Reset demo data**.
 
 You can also add a query string to any URL:
 
@@ -64,12 +66,15 @@ Optional: `&candidates=one|six|long` and `&voters=1000`. Applying a scenario res
 
 Validated by `src/config/env.ts`.
 
-| Name                      | Default    | Purpose                                                                                |
-| ------------------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_MOCKING` | `disabled` | `enabled` runs the in-repo mock API. Build-time: `pnpm build` always forces `disabled` |
-| `NEXT_PUBLIC_BOOTH_MODE`  | `true`     | Shared-device mode: idle timeout and auto sign-out                                     |
-| `API_BASE_URL`            | –          | Real backend URL. The browser calls `/api/*`; Next rewrites it here                    |
-| `NEXT_OUTPUT`             | –          | `standalone` for self-host builds (`pnpm build:standalone`)                            |
+| Name                      | Default                  | Purpose                                                                                                                 |
+| ------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_MOCKING` | `disabled`               | `enabled` runs the in-repo mock API. Build-time: `pnpm build` always forces `disabled`                                  |
+| `NEXT_PUBLIC_BOOTH_MODE`  | `true`                   | Shared-device mode: idle timeout and auto sign-out                                                                      |
+| `API_BASE_URL`            | –                        | Runtime. Backend origin (e.g. `https://api.example.org`); the Next server forwards `/api/*` there with the Bearer token |
+| `IMAGE_REMOTE_PATTERNS`   | –                        | Build time. Hosts allowed for candidate photos, e.g. `https://cdn.example.org/photos/**`                                |
+| `SESSION_COOKIE_VOTER`    | `pilketum_voter_session` | Runtime. Name of the backend's voter session cookie (checked by `src/proxy.ts`)                                         |
+| `SESSION_COOKIE_ADMIN`    | `pilketum_admin_session` | Runtime. Name of the backend's committee session cookie                                                                 |
+| `NEXT_OUTPUT`             | –                        | `standalone` for self-host builds (`pnpm build:standalone`)                                                             |
 
 ## Scripts
 
@@ -84,6 +89,9 @@ Validated by `src/config/env.ts`.
 | `pnpm test`, `pnpm test:coverage`                  | Unit and contract tests (Vitest)                                                                          |
 | `pnpm e2e`                                         | Playwright e2e (desktop, Pixel 7, iPhone 14). Needs `pnpm build:mock` first; uses port 4310               |
 | `pnpm check:bundle`                                | After `pnpm build`: fails if demo accounts or mock code are in the output                                 |
+| `pnpm check:js`                                    | After `pnpm build`: first-load JS budget per page (app ≤ 80 KB, total ≤ 200 KB Brotli)                    |
+| `pnpm contract:openapi`                            | Regenerate `docs/openapi.json` from `src/lib/api/contract.ts` (`--check` in CI)                           |
+| `pnpm contract:check <apiBaseUrl>`                 | Read-only live check of a running API against the contract (test accounts via `CONTRACT_*` env)           |
 | `pnpm lhci`                                        | Lighthouse CI (port 4320)                                                                                 |
 
 First time running e2e: `pnpm exec playwright install chromium webkit`.
@@ -106,7 +114,7 @@ src/lib         api client + schemas, query client, pure utils
 src/mocks       mock API (handlers, in-memory db, fixtures, scenarios)
 src/config      env schema and constants
 src/content     all UI copy
-docs/           PLAN, DEVIATIONS, API_CONTRACT, QA_REPORT
+docs/           PLAN, DEVIATIONS, API_CONTRACT (+ generated openapi.json), INTEGRATION, BACKEND_QUESTIONS, QA_REPORT
 tests/          Playwright e2e, visual, a11y
 ```
 
@@ -114,6 +122,9 @@ Rules for contributors (and Claude Code) are in `CLAUDE.md`.
 
 ## Connecting the real backend
 
-1. Compare the backend docs with `docs/API_CONTRACT.md`.
-2. Update `src/lib/api/schemas.ts` / `endpoints.ts` (and the mock handlers, so tests keep matching).
-3. Set `API_BASE_URL`, build with `pnpm build`, and run the QA checklist again.
+Full runbook: `docs/INTEGRATION.md`. In short:
+
+1. Build with `IMAGE_REMOTE_PATTERNS` set to the photo host; run with `API_BASE_URL` set to the backend origin.
+2. `pnpm contract:check <stagingOrigin>` (with test accounts) until every check passes.
+3. Make sure the backend trusts `X-Forwarded-For` from the frontend server (rate limits are per IP).
+4. Run the QA checklist again on staging.

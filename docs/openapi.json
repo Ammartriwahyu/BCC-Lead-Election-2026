@@ -1,0 +1,4595 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Pilketum BCC 2026 API (as used by the frontend)",
+    "version": "0.1.0",
+    "description": "Generated from src/lib/api/contract.ts by `pnpm contract:openapi`. Do not edit by hand. Source: the backend doc \"API Pilketum BCC\"; open points in docs/BACKEND_QUESTIONS.md."
+  },
+  "servers": [
+    {
+      "url": "{origin}/api",
+      "variables": {
+        "origin": {
+          "default": "https://api.example.org"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "public",
+      "description": "No token"
+    },
+    {
+      "name": "voter",
+      "description": "Voter Bearer token"
+    },
+    {
+      "name": "committee",
+      "description": "Committee Bearer token"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Liveness",
+        "tags": [
+          "public"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/election": {
+      "get": {
+        "operationId": "getElection",
+        "summary": "Voting status for the sign-in page (not_started, open, closed) and server time",
+        "tags": [
+          "public"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "server_time": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/display": {
+      "get": {
+        "operationId": "getDisplay",
+        "summary": "Payload of the screen on air, nothing else",
+        "tags": [
+          "public"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "voting_opens_soon"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "candidates": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "voting_open"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "voting_closed"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "winner_suspense"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        },
+                        "total_votes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "candidates": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout",
+                        "total_votes"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "final_results"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        },
+                        "total_votes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "top_tied": {
+                          "type": "boolean"
+                        },
+                        "results": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "share": {
+                                    "type": "number"
+                                  },
+                                  "rank": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url",
+                                  "votes",
+                                  "share",
+                                  "rank"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout",
+                        "total_votes",
+                        "top_tied"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "most_votes"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        },
+                        "total_votes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "top_tied": {
+                          "type": "boolean"
+                        },
+                        "winners": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "share": {
+                                    "type": "number"
+                                  },
+                                  "rank": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url",
+                                  "votes",
+                                  "share",
+                                  "rank"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout",
+                        "total_votes",
+                        "top_tied"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/display/stream": {
+      "get": {
+        "operationId": "streamDisplay",
+        "summary": "Server-sent events: the /display payload on connect and on every change",
+        "tags": [
+          "public"
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events. Each `event: display` carries JSON matching x-event-data",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "x-event-name": "display",
+            "x-event-data": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "screen": {
+                      "type": "string",
+                      "const": "voting_opens_soon"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "candidates": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "ballot_number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "study_program": {
+                                "type": "string"
+                              },
+                              "class_year": {
+                                "type": "integer"
+                              },
+                              "photo_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ballot_number",
+                              "full_name",
+                              "study_program",
+                              "class_year",
+                              "photo_url"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "screen",
+                    "status"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "screen": {
+                      "type": "string",
+                      "const": "voting_open"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "turnout": {
+                      "type": "object",
+                      "properties": {
+                        "registered": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "registered",
+                        "voted",
+                        "not_voted",
+                        "percent"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "screen",
+                    "status",
+                    "turnout"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "screen": {
+                      "type": "string",
+                      "const": "voting_closed"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "turnout": {
+                      "type": "object",
+                      "properties": {
+                        "registered": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "registered",
+                        "voted",
+                        "not_voted",
+                        "percent"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "screen",
+                    "status",
+                    "turnout"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "screen": {
+                      "type": "string",
+                      "const": "winner_suspense"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "turnout": {
+                      "type": "object",
+                      "properties": {
+                        "registered": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "registered",
+                        "voted",
+                        "not_voted",
+                        "percent"
+                      ]
+                    },
+                    "total_votes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "candidates": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "ballot_number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "study_program": {
+                                "type": "string"
+                              },
+                              "class_year": {
+                                "type": "integer"
+                              },
+                              "photo_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ballot_number",
+                              "full_name",
+                              "study_program",
+                              "class_year",
+                              "photo_url"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "screen",
+                    "status",
+                    "turnout",
+                    "total_votes"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "screen": {
+                      "type": "string",
+                      "const": "final_results"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "turnout": {
+                      "type": "object",
+                      "properties": {
+                        "registered": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "registered",
+                        "voted",
+                        "not_voted",
+                        "percent"
+                      ]
+                    },
+                    "total_votes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "top_tied": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "ballot_number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "study_program": {
+                                "type": "string"
+                              },
+                              "class_year": {
+                                "type": "integer"
+                              },
+                              "photo_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "votes": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "share": {
+                                "type": "number"
+                              },
+                              "rank": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ballot_number",
+                              "full_name",
+                              "study_program",
+                              "class_year",
+                              "photo_url",
+                              "votes",
+                              "share",
+                              "rank"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "screen",
+                    "status",
+                    "turnout",
+                    "total_votes",
+                    "top_tied"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "screen": {
+                      "type": "string",
+                      "const": "most_votes"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "turnout": {
+                      "type": "object",
+                      "properties": {
+                        "registered": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "registered",
+                        "voted",
+                        "not_voted",
+                        "percent"
+                      ]
+                    },
+                    "total_votes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "top_tied": {
+                      "type": "boolean"
+                    },
+                    "winners": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "ballot_number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "study_program": {
+                                "type": "string"
+                              },
+                              "class_year": {
+                                "type": "integer"
+                              },
+                              "photo_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "votes": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "share": {
+                                "type": "number"
+                              },
+                              "rank": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ballot_number",
+                              "full_name",
+                              "study_program",
+                              "class_year",
+                              "photo_url",
+                              "votes",
+                              "share",
+                              "rank"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "screen",
+                    "status",
+                    "turnout",
+                    "total_votes",
+                    "top_tied"
+                  ]
+                }
+              ]
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_STREAMS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "STREAM_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "voterSignIn",
+        "summary": "UB SSO sign-in with NIM or UB email. Either a session or an OTP challenge (2FA)",
+        "tags": [
+          "voter"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "otp_required": {
+                          "type": "boolean",
+                          "const": true
+                        },
+                        "flow": {
+                          "type": "string"
+                        },
+                        "devices": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "default": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "default"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "otp_required",
+                        "flow"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "expires_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "voter": {
+                          "type": "object",
+                          "properties": {
+                            "nim": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "class_year": {
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "study_program": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "department": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "has_voted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "nim",
+                            "name",
+                            "email",
+                            "has_voted"
+                          ]
+                        },
+                        "election": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "not_started",
+                                "open",
+                                "closed"
+                              ]
+                            },
+                            "server_time": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "status"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "voter",
+                        "election"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "x-frontend": "The Next server keeps `token` in an httpOnly cookie and removes token/expires_at from the body"
+          },
+          "400": {
+            "description": "BAD_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "NOT_REGISTERED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "SSO_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SSO_BUSY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/otp": {
+      "post": {
+        "operationId": "voterOtp",
+        "summary": "Second step for 2FA accounts. OTP_INVALID returns a new flow",
+        "tags": [
+          "voter"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "voter": {
+                      "type": "object",
+                      "properties": {
+                        "nim": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "class_year": {
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "study_program": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "department": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "has_voted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "nim",
+                        "name",
+                        "email",
+                        "has_voted"
+                      ]
+                    },
+                    "election": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "server_time": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "voter",
+                    "election"
+                  ]
+                }
+              }
+            },
+            "x-frontend": "The Next server keeps `token` in an httpOnly cookie and removes token/expires_at from the body"
+          },
+          "401": {
+            "description": "OTP_INVALID | OTP_EXPIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "SSO_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SSO_BUSY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "flow": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "device_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "flow",
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "voterSignOut",
+        "summary": "Ends the voter session",
+        "tags": [
+          "voter"
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "voterToken": []
+          }
+        ]
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "getMe",
+        "summary": "The signed-in voter (has_voted) and the voting status",
+        "tags": [
+          "voter"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "voter": {
+                      "type": "object",
+                      "properties": {
+                        "nim": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "class_year": {
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "study_program": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "department": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "has_voted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "nim",
+                        "name",
+                        "email",
+                        "has_voted"
+                      ]
+                    },
+                    "election": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "server_time": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "voter",
+                    "election"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "voterToken": []
+          }
+        ]
+      }
+    },
+    "/candidates": {
+      "get": {
+        "operationId": "getCandidates",
+        "summary": "All candidates with vision and missions, by ballot number",
+        "tags": [
+          "voter"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "candidates": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "ballot_number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "study_program": {
+                                "type": "string"
+                              },
+                              "class_year": {
+                                "type": "integer"
+                              },
+                              "vision": {
+                                "type": "string"
+                              },
+                              "missions": {
+                                "anyOf": [
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "photo_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ballot_number",
+                              "full_name",
+                              "study_program",
+                              "class_year",
+                              "vision",
+                              "photo_url"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "voterToken": []
+          }
+        ]
+      }
+    },
+    "/votes": {
+      "post": {
+        "operationId": "submitVote",
+        "summary": "Casts the vote. Final. The backend keeps no link between voter and candidate",
+        "tags": [
+          "voter"
+        ],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "voted": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "voted"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "VOTING_NOT_OPEN | ALREADY_VOTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "candidate_id": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "candidate_id"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "voterToken": []
+          }
+        ]
+      }
+    },
+    "/admin/auth/login": {
+      "post": {
+        "operationId": "adminSignIn",
+        "summary": "Committee sign-in",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "username": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "username"
+                  ]
+                }
+              }
+            },
+            "x-frontend": "The Next server keeps `token` in an httpOnly cookie and removes token/expires_at from the body"
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/admin/me": {
+      "get": {
+        "operationId": "getAdminMe",
+        "summary": "The signed-in committee account",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "username"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/overview": {
+      "get": {
+        "operationId": "getAdminOverview",
+        "summary": "Status, screen on air, candidate count, turnout. Never votes per candidate",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "display_screen": {
+                      "type": "string",
+                      "enum": [
+                        "voting_opens_soon",
+                        "voting_open",
+                        "voting_closed",
+                        "winner_suspense",
+                        "final_results",
+                        "most_votes"
+                      ]
+                    },
+                    "opened_at": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "closed_at": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "candidates": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "turnout": {
+                      "type": "object",
+                      "properties": {
+                        "registered": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "registered",
+                        "voted",
+                        "not_voted",
+                        "percent"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "display_screen",
+                    "opened_at",
+                    "closed_at",
+                    "candidates",
+                    "turnout"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/stream": {
+      "get": {
+        "operationId": "streamAdmin",
+        "summary": "Server-sent events: the /admin/overview payload on change (the panel polls instead)",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events. Each `event: overview` carries JSON matching x-event-data",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "x-event-name": "overview",
+            "x-event-data": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "not_started",
+                    "open",
+                    "closed"
+                  ]
+                },
+                "display_screen": {
+                  "type": "string",
+                  "enum": [
+                    "voting_opens_soon",
+                    "voting_open",
+                    "voting_closed",
+                    "winner_suspense",
+                    "final_results",
+                    "most_votes"
+                  ]
+                },
+                "opened_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "closed_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "candidates": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "turnout": {
+                  "type": "object",
+                  "properties": {
+                    "registered": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "voted": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "not_voted": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "percent": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "registered",
+                    "voted",
+                    "not_voted",
+                    "percent"
+                  ]
+                }
+              },
+              "required": [
+                "status",
+                "display_screen",
+                "opened_at",
+                "closed_at",
+                "candidates",
+                "turnout"
+              ]
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_STREAMS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "STREAM_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/election/{action}": {
+      "post": {
+        "operationId": "changeElectionState",
+        "summary": "open (not_started→open, needs 3 complete candidates), close (open→closed), reopen (closed→open)",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "display_screen": {
+                      "type": "string",
+                      "enum": [
+                        "voting_opens_soon",
+                        "voting_open",
+                        "voting_closed",
+                        "winner_suspense",
+                        "final_results",
+                        "most_votes"
+                      ]
+                    },
+                    "opened_at": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "closed_at": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "display_screen",
+                    "opened_at",
+                    "closed_at"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "INVALID_STATE | CANDIDATES_INCOMPLETE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "close",
+                "reopen"
+              ]
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/display": {
+      "put": {
+        "operationId": "setDisplayScreen",
+        "summary": "Puts a result screen on the public display. Only while closed",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RESULTS_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_SCREEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "screen": {
+                    "type": "string",
+                    "enum": [
+                      "voting_closed",
+                      "winner_suspense",
+                      "final_results",
+                      "most_votes"
+                    ]
+                  }
+                },
+                "required": [
+                  "screen"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/display/preview": {
+      "get": {
+        "operationId": "previewDisplay",
+        "summary": "Payload of a screen without putting it on air",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "voting_opens_soon"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "candidates": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "voting_open"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "voting_closed"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "winner_suspense"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        },
+                        "total_votes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "candidates": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout",
+                        "total_votes"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "final_results"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        },
+                        "total_votes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "top_tied": {
+                          "type": "boolean"
+                        },
+                        "results": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "share": {
+                                    "type": "number"
+                                  },
+                                  "rank": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url",
+                                  "votes",
+                                  "share",
+                                  "rank"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout",
+                        "total_votes",
+                        "top_tied"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "screen": {
+                          "type": "string",
+                          "const": "most_votes"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "not_started",
+                            "open",
+                            "closed"
+                          ]
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        },
+                        "total_votes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "top_tied": {
+                          "type": "boolean"
+                        },
+                        "winners": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "share": {
+                                    "type": "number"
+                                  },
+                                  "rank": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url",
+                                  "votes",
+                                  "share",
+                                  "rank"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "screen",
+                        "status",
+                        "turnout",
+                        "total_votes",
+                        "top_tied"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RESULTS_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_SCREEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "screen",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "voting_closed",
+                "winner_suspense",
+                "final_results",
+                "most_votes"
+              ]
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/voters": {
+      "get": {
+        "operationId": "getAdminVoters",
+        "summary": "Voter list page. search matches name, email or NIM",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "voters": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "nim": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "email": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "department": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "class_year": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "has_voted": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "nim",
+                                  "name",
+                                  "email",
+                                  "has_voted"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "page": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        "total": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "total_pages": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "page",
+                        "per_page",
+                        "total",
+                        "total_pages"
+                      ]
+                    },
+                    "turnout": {
+                      "type": "object",
+                      "properties": {
+                        "registered": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_voted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "registered",
+                        "voted",
+                        "not_voted",
+                        "percent"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "voters",
+                    "turnout"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "voted",
+                "not_voted"
+              ]
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/results": {
+      "get": {
+        "operationId": "getAdminResults",
+        "summary": "Votes per candidate, leaders, ties, integrity check. Only while closed",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "not_started",
+                        "open",
+                        "closed"
+                      ]
+                    },
+                    "display_screen": {
+                      "type": "string",
+                      "enum": [
+                        "voting_opens_soon",
+                        "voting_open",
+                        "voting_closed",
+                        "winner_suspense",
+                        "final_results",
+                        "most_votes"
+                      ]
+                    },
+                    "results": {
+                      "type": "object",
+                      "properties": {
+                        "total_votes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "turnout": {
+                          "type": "object",
+                          "properties": {
+                            "registered": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "not_voted": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "percent": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "registered",
+                            "voted",
+                            "not_voted",
+                            "percent"
+                          ]
+                        },
+                        "candidates": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "ballot_number": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "full_name": {
+                                    "type": "string"
+                                  },
+                                  "study_program": {
+                                    "type": "string"
+                                  },
+                                  "class_year": {
+                                    "type": "integer"
+                                  },
+                                  "photo_url": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "share": {
+                                    "type": "number"
+                                  },
+                                  "rank": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ballot_number",
+                                  "full_name",
+                                  "study_program",
+                                  "class_year",
+                                  "photo_url",
+                                  "votes",
+                                  "share",
+                                  "rank"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "leaders": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "top_tied": {
+                          "type": "boolean"
+                        },
+                        "integrity_ok": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "total_votes",
+                        "turnout",
+                        "top_tied",
+                        "integrity_ok"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "display_screen",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RESULTS_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/results/export": {
+      "get": {
+        "operationId": "exportResults",
+        "summary": "Excel file (Summary, Results, Voters). Only while closed",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "File download (name in Content-Disposition)",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RESULTS_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/candidates": {
+      "get": {
+        "operationId": "getAdminCandidates",
+        "summary": "All candidates (same as GET /candidates)",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "candidates": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "ballot_number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "study_program": {
+                                "type": "string"
+                              },
+                              "class_year": {
+                                "type": "integer"
+                              },
+                              "vision": {
+                                "type": "string"
+                              },
+                              "missions": {
+                                "anyOf": [
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "photo_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ballot_number",
+                              "full_name",
+                              "study_program",
+                              "class_year",
+                              "vision",
+                              "photo_url"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createCandidate",
+        "summary": "Adds a candidate. Only before voting first opens; ballot numbers 1–3",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "ballot_number": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "study_program": {
+                      "type": "string"
+                    },
+                    "class_year": {
+                      "type": "integer"
+                    },
+                    "vision": {
+                      "type": "string"
+                    },
+                    "missions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "photo_url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ballot_number",
+                    "full_name",
+                    "study_program",
+                    "class_year",
+                    "vision",
+                    "photo_url"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "BALLOT_NUMBER_TAKEN | CANDIDATES_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ballot_number": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "study_program": {
+                    "type": "string"
+                  },
+                  "class_year": {
+                    "type": "integer"
+                  },
+                  "vision": {
+                    "type": "string"
+                  },
+                  "missions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "ballot_number",
+                  "full_name",
+                  "study_program",
+                  "class_year",
+                  "vision",
+                  "missions"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/candidates/{id}": {
+      "get": {
+        "operationId": "getAdminCandidate",
+        "summary": "One candidate",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "ballot_number": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "study_program": {
+                      "type": "string"
+                    },
+                    "class_year": {
+                      "type": "integer"
+                    },
+                    "vision": {
+                      "type": "string"
+                    },
+                    "missions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "photo_url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ballot_number",
+                    "full_name",
+                    "study_program",
+                    "class_year",
+                    "vision",
+                    "photo_url"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "updateCandidate",
+        "summary": "Replaces a candidate (all fields)",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "ballot_number": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "study_program": {
+                      "type": "string"
+                    },
+                    "class_year": {
+                      "type": "integer"
+                    },
+                    "vision": {
+                      "type": "string"
+                    },
+                    "missions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "photo_url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ballot_number",
+                    "full_name",
+                    "study_program",
+                    "class_year",
+                    "vision",
+                    "photo_url"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "BALLOT_NUMBER_TAKEN | CANDIDATES_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ballot_number": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "study_program": {
+                    "type": "string"
+                  },
+                  "class_year": {
+                    "type": "integer"
+                  },
+                  "vision": {
+                    "type": "string"
+                  },
+                  "missions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "ballot_number",
+                  "full_name",
+                  "study_program",
+                  "class_year",
+                  "vision",
+                  "missions"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteCandidate",
+        "summary": "Removes a candidate and its photo",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CANDIDATES_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    },
+    "/admin/candidates/{id}/photo": {
+      "put": {
+        "operationId": "uploadCandidatePhoto",
+        "summary": "Uploads the photo (multipart field \"photo\", JPG/PNG up to 2 MB)",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "ballot_number": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "study_program": {
+                      "type": "string"
+                    },
+                    "class_year": {
+                      "type": "integer"
+                    },
+                    "vision": {
+                      "type": "string"
+                    },
+                    "missions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "photo_url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ballot_number",
+                    "full_name",
+                    "study_program",
+                    "class_year",
+                    "vision",
+                    "photo_url"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CANDIDATES_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "PHOTO_TOO_LARGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "PHOTO_INVALID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "photo"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteCandidatePhoto",
+        "summary": "Removes the photo",
+        "tags": [
+          "committee"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "ballot_number": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "study_program": {
+                      "type": "string"
+                    },
+                    "class_year": {
+                      "type": "integer"
+                    },
+                    "vision": {
+                      "type": "string"
+                    },
+                    "missions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "photo_url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ballot_number",
+                    "full_name",
+                    "study_program",
+                    "class_year",
+                    "vision",
+                    "photo_url"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CANDIDATES_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "voterToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Voter token (2 h)"
+      },
+      "adminToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Committee token (12 h)"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "flow": {
+            "type": "string"
+          },
+          "devices": {
+            "type": "array",
+            "items": {}
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "x-known-codes": [
+          "BAD_REQUEST",
+          "UNAUTHORIZED",
+          "INVALID_CREDENTIALS",
+          "OTP_INVALID",
+          "OTP_EXPIRED",
+          "FORBIDDEN",
+          "NOT_REGISTERED",
+          "NOT_FOUND",
+          "VOTING_NOT_OPEN",
+          "ALREADY_VOTED",
+          "CANDIDATES_LOCKED",
+          "MEMBERS_LOCKED",
+          "BALLOT_NUMBER_TAKEN",
+          "CANDIDATES_INCOMPLETE",
+          "INVALID_STATE",
+          "RESULTS_LOCKED",
+          "PHOTO_TOO_LARGE",
+          "VALIDATION_FAILED",
+          "PHOTO_INVALID",
+          "INVALID_SCREEN",
+          "RATE_LIMITED",
+          "TOO_MANY_STREAMS",
+          "INTERNAL_ERROR",
+          "SSO_UNAVAILABLE",
+          "SSO_BUSY",
+          "STREAM_UNAVAILABLE"
+        ]
+      }
+    }
+  }
+}

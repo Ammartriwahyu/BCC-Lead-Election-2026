@@ -80,6 +80,33 @@ export default defineConfig([
     },
   },
   {
+    // lib/api boundary: the app uses endpoints.ts (calls), types.ts and errors.ts only. Swapping the
+    // backend then touches lib/api and mocks, nothing else (docs/INTEGRATION.md).
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/lib/api/**',
+      'src/lib/bff/**',
+      'src/mocks/**',
+      'src/test/**',
+      'src/**/*.test.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              // zodConfig: side-effect import (jitless Zod) for form schemas.
+              regex: '^@/lib/api/(?!(endpoints|types|errors|zodConfig)$)',
+              message:
+                'Import from @/lib/api/endpoints, types or errors. Wire format and HTTP stay inside lib/api.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.{mjs,js}', 'scripts/**', '*.config.ts'],
     extends: [tseslint.configs.disableTypeChecked],
     rules: { 'no-console': 'off' },

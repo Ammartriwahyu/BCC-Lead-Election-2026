@@ -83,9 +83,9 @@ describe('booth components', () => {
 
   it('shows the auto sign-out countdown and signs out at zero', async () => {
     renderWithProviders(<AutoSignOutNotice />);
-    expect(screen.getByRole('timer')).toHaveTextContent('Signing you out in 10s');
+    expect(screen.getByRole('timer')).toHaveTextContent('Signing you out in 3s');
     act(() => {
-      vi.advanceTimersByTime(10_500);
+      vi.advanceTimersByTime(3_500);
     });
     await vi.waitFor(() => {
       expect(navigation.router.replace).toHaveBeenCalledWith('/sign-in?reason=signed-out');

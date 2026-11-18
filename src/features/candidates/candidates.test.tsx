@@ -9,13 +9,13 @@ import { renderWithProviders } from '@/test/render';
 import { CandidateDetailView } from './components/CandidateDetailView';
 
 beforeEach(async () => {
-  resetNavigation('/candidates/cand-01');
+  resetNavigation('/candidates/1');
   await voterSignIn('voter@bcc.test', 'pilketum2026');
 });
 
 describe('CandidateDetailView', () => {
   it('shows vision and missions with the not-open note before voting opens', async () => {
-    renderWithProviders(<CandidateDetailView id="cand-01" />, { voting: true });
+    renderWithProviders(<CandidateDetailView id="1" />, { voting: true });
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Candidate Name 01' }),
     ).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe('CandidateDetailView', () => {
   it('selects the candidate and returns to the list while open', async () => {
     applyScenario('open');
     await voterSignIn('voter@bcc.test', 'pilketum2026');
-    renderWithProviders(<CandidateDetailView id="cand-02" />, { voting: true });
+    renderWithProviders(<CandidateDetailView id="2" />, { voting: true });
     const user = userEvent.setup();
     const [select] = await screen.findAllByRole('button', { name: 'Select this candidate' });
     if (!select) throw new Error('missing button');
@@ -43,7 +43,7 @@ describe('CandidateDetailView', () => {
   });
 
   it('goes back to the list', async () => {
-    renderWithProviders(<CandidateDetailView id="cand-01" />, { voting: true });
+    renderWithProviders(<CandidateDetailView id="1" />, { voting: true });
     await userEvent.setup().click(await screen.findByRole('button', { name: /Back/ }));
     expect(navigation.router.replace).toHaveBeenCalledWith('/candidates');
   });

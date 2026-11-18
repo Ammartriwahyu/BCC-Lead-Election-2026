@@ -1,15 +1,10 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
-import { ACCOUNTS } from './helpers';
-
-interface Account {
-  email: string;
-  password: string;
-}
+import { ACCOUNTS, type Account } from './helpers';
 
 export async function signIn(page: Page, account: Account = ACCOUNTS.voter): Promise<void> {
   if (!page.url().includes('/sign-in')) await page.goto('/sign-in');
-  await page.getByRole('textbox', { name: 'Email' }).fill(account.email);
+  await page.getByRole('textbox', { name: 'NIM or UB email' }).fill(account.username);
   await page
     .getByLabel(/^Password/, { exact: false })
     .first()
@@ -17,13 +12,10 @@ export async function signIn(page: Page, account: Account = ACCOUNTS.voter): Pro
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 }
 
-/** Committee actions without the admin UI (Phase 4): sign in through the API and change state. */
+/** Committee actions without the admin UI: sign in through the API and change state. */
 export async function committee(request: APIRequestContext, action: 'open' | 'close' | 'reopen') {
-  await request.post('/api/admin/auth/sign-in', { data: ACCOUNTS.committee });
-  const expected = { open: 'NOT_STARTED', close: 'OPEN', reopen: 'CLOSED' }[action];
-  const response = await request.post(`/api/admin/election/${action}`, {
-    data: { expectedState: expected },
-  });
+  await request.post('/api/admin/auth/login', { data: ACCOUNTS.committee });
+  const response = await request.post(`/api/admin/election/${action}`);
   expect(response.ok()).toBe(true);
 }
 

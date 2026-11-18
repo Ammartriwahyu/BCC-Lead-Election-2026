@@ -46,3 +46,14 @@ export function formatDateWib(date: Date): string {
 export function formatCandidateNumber(value: number): string {
   return String(value).padStart(2, '0');
 }
+
+const KILOBYTE = 1024;
+const sizeFormatter = new Intl.NumberFormat(FORMAT.locale, { maximumFractionDigits: 1 });
+
+/** 1_258_291 -> "1.2 MB", 350_000 -> "341.8 KB" (binary units, 1 decimal). */
+export function formatFileSize(bytes: number): string {
+  if (bytes >= KILOBYTE * KILOBYTE)
+    return `${sizeFormatter.format(bytes / (KILOBYTE * KILOBYTE))} MB`;
+  if (bytes >= KILOBYTE) return `${sizeFormatter.format(bytes / KILOBYTE)} KB`;
+  return `${sizeFormatter.format(bytes)} B`;
+}

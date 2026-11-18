@@ -3,7 +3,8 @@
  * axe (no serious/critical), no horizontal scroll, keyboard focus return.
  */
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+
+import { expect, test, type Page } from '../fixtures';
 
 const WIDTHS = [360, 390, 768, 1024, 1280, 1512] as const;
 

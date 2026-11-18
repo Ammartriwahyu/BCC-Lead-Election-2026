@@ -225,11 +225,8 @@ describe('classifySubmitError', () => {
       to: '/already-voted',
       refetch: 'me',
     });
-    expect(classifySubmitError(api('VOTING_CLOSED'))).toMatchObject({ to: '/closed' });
-    expect(classifySubmitError(api('VOTING_NOT_OPEN'))).toEqual({
-      kind: 'stay',
-      refetch: 'election',
-    });
+    // One code for "not opened yet" and "already closed": the fresh state decides.
+    expect(classifySubmitError(api('VOTING_NOT_OPEN'))).toEqual({ kind: 'not-open' });
     expect(classifySubmitError(api('NOT_FOUND'))).toEqual({ kind: 'stay', refetch: 'candidates' });
     expect(classifySubmitError(api('UNAUTHORIZED'))).toEqual({ kind: 'session' });
     expect(classifySubmitError(api('TIMEOUT'))).toMatchObject({ to: '/vote/error', refetch: null });

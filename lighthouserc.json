@@ -3,7 +3,11 @@
     "collect": {
       "startServerCommand": "pnpm start --port 4320",
       "startServerReadyPattern": "Ready",
-      "url": ["http://localhost:4320/sign-in"],
+      "url": [
+        "http://localhost:4320/sign-in",
+        "http://localhost:4320/admin/sign-in",
+        "http://localhost:4320/display"
+      ],
       "numberOfRuns": 3
     },
     "assert": {

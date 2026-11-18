@@ -36,8 +36,8 @@ export function CandidatesHero({ open }: { open: boolean }) {
           )}
         </p>
       </div>
-      <Brace pose={open ? 'hello' : 'woah'} width={96} priority className="md:hidden" />
-      <Brace pose={open ? 'hello' : 'woah'} width={220} priority className="hidden md:block" />
+      <Brace pose={open ? 'hello' : 'woah'} width={96} eager className="md:hidden" />
+      <Brace pose={open ? 'hello' : 'woah'} width={220} eager className="hidden md:block" />
     </section>
   );
 }

@@ -23,6 +23,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm tokens --check
+      - run: pnpm contract:openapi --check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:coverage
@@ -43,6 +44,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm check:bundle
+      - run: pnpm check:js
 
   e2e:
     name: E2E + a11y + Lighthouse (mock build)
@@ -50,6 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_API_MOCKING: enabled
+      # Ubuntu runners have no Microsoft Edge; Edge runs locally on Windows.
+      E2E_SKIP_EDGE: '1'
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -58,7 +62,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium webkit
+      - run: pnpm exec playwright install --with-deps chromium webkit firefox
       - run: pnpm build:mock
       - run: pnpm e2e
       - run: pnpm lhci

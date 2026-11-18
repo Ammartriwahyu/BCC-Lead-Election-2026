@@ -13,7 +13,7 @@ describe('shouldRetry', () => {
 
   it('never retries final answers', () => {
     expect(shouldRetry(0, new ApiError('UNAUTHORIZED', { status: 401 }))).toBe(false);
-    expect(shouldRetry(0, new ApiError('VOTING_CLOSED', { status: 409 }))).toBe(false);
+    expect(shouldRetry(0, new ApiError('VOTING_NOT_OPEN', { status: 409 }))).toBe(false);
   });
 
   it('retries unknown non-API errors a limited number of times', () => {
@@ -25,6 +25,16 @@ describe('shouldRetry', () => {
 describe('makeQueryClient', () => {
   it('never retries mutations automatically', () => {
     expect(makeQueryClient().getDefaultOptions().mutations?.retry).toBe(false);
+  });
+
+  it('drops finished mutations at once (no detached pages kept by their callbacks)', async () => {
+    const client = makeQueryClient();
+    const mutation = client
+      .getMutationCache()
+      .build(client, { mutationFn: () => Promise.resolve(1) });
+    await mutation.execute(undefined);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(client.getMutationCache().getAll()).toHaveLength(0);
   });
 });
 

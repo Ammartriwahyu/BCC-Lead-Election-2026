@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.E2E_PORT ?? 4310);
 const baseURL = `http://localhost:${PORT}`;
+const DESKTOP = { width: 1512, height: 982 };
 
 /**
  * E2E runs against a production build made with the mock API enabled (pnpm build:mock).
@@ -27,13 +28,36 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop-chrome',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1512, height: 982 } },
+      use: { ...devices['Desktop Chrome'], viewport: DESKTOP },
     },
     { name: 'pixel-7', use: { ...devices['Pixel 7'] }, testMatch: /e2e\/voter.*\.spec\.ts/ },
     { name: 'iphone-14', use: { ...devices['iPhone 14'] }, testMatch: /e2e\/voter.*\.spec\.ts/ },
+    // Spec §10 browsers: the flows tagged @cross-browser also run on Edge, Firefox and desktop
+    // Safari (WebKit). Edge uses the installed browser; set E2E_SKIP_EDGE=1 where it is missing.
+    ...(process.env.E2E_SKIP_EDGE
+      ? []
+      : [
+          {
+            name: 'edge',
+            use: { ...devices['Desktop Edge'], channel: 'msedge', viewport: DESKTOP },
+            grep: /@cross-browser/,
+          },
+        ]),
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'], viewport: DESKTOP },
+      grep: /@cross-browser/,
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'], viewport: DESKTOP },
+      grep: /@cross-browser/,
+    },
   ],
   webServer: {
-    command: `pnpm start --port ${PORT}`,
+    // Node closes idle keep-alive sockets after 5 s; Playwright's request client sometimes reused one
+    // at that moment (ECONNRESET in tests). Keep them open longer than any pause between calls.
+    command: `pnpm start --port ${PORT} --keepAliveTimeout 70000`,
     url: `${baseURL}/api/election`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

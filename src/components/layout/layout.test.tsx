@@ -13,7 +13,7 @@ describe('initialsOf', () => {
 
 describe('AdminTopbar', () => {
   it('renders the breadcrumb with the current page marked', () => {
-    render(<AdminTopbar page="Voter list" accountName="Election Committee" />);
+    render(<AdminTopbar trail={['Voter list']} accountName="Election Committee" />);
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent(
       'Election/Voter list',
     );

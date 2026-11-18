@@ -15,7 +15,7 @@ import {
 import { useAnnouncer } from '@/components/ui/Announcer';
 import { ROUTES } from '@/config/constants';
 import { content } from '@/content/copy';
-import { getMe, submitVote } from '@/lib/api/endpoints';
+import { getElection, getMe, submitVote } from '@/lib/api/endpoints';
 import type { VoterMe } from '@/lib/api/types';
 import { queryKeys } from '@/lib/query/keys';
 
@@ -25,8 +25,6 @@ export type SubmitResult = 'submitted' | 'navigated' | 'stayed' | 'skipped';
 
 interface PendingVote {
   candidateId: string;
-  /** Reused on every retry of this pick so the backend never stores a second vote. */
-  idempotencyKey: string;
 }
 
 interface VotingApi {
@@ -47,10 +45,6 @@ interface VotingApi {
 
 const VotingContext = createContext<VotingApi | null>(null);
 
-function newKey(): string {
-  return crypto.randomUUID();
-}
-
 /**
  * Selection and submit flow for one signed-in voter. State lives only in memory inside the
  * session layout: it is gone after sign-out or reload (booth rule: no web storage).
@@ -70,7 +64,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
 
   const select = useCallback((candidateId: string) => {
     setSelectedId(candidateId);
-    // A new pick is a new vote attempt; a stale key from another candidate must not be reused.
+    // A new pick is a new vote attempt; the failed one (V4) belonged to another candidate.
     setPendingVote((current) => (current?.candidateId === candidateId ? current : null));
   }, []);
 
@@ -85,7 +79,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
       setIsSubmitting(true);
       announce(content.confirm.submittingTitle);
       try {
-        const receipt = await submitVote(vote.candidateId, vote.idempotencyKey);
+        const receipt = await submitVote(vote.candidateId);
         setJustSubmitted(true);
         queryClient.setQueryData<VoterMe>(queryKeys.voter.me, (me) =>
           me ? { ...me, status: 'VOTED', submittedAt: receipt.submittedAt } : me,
@@ -98,19 +92,24 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         const outcome = classifySubmitError(error);
         if (outcome.kind === 'session') return 'navigated';
         if (outcome.kind === 'stay') {
-          if (outcome.refetch === 'candidates') {
-            setSelectedId(null);
-            setPendingVote(null);
-            await queryClient.invalidateQueries({ queryKey: queryKeys.voter.candidates });
-          } else {
-            await queryClient.invalidateQueries({ queryKey: queryKeys.election });
+          setSelectedId(null);
+          setPendingVote(null);
+          await queryClient.invalidateQueries({ queryKey: queryKeys.voter.candidates });
+          return 'stayed';
+        }
+        if (outcome.kind === 'not-open') {
+          setPendingVote(null);
+          const election = await queryClient
+            .query({ queryKey: queryKeys.election, queryFn: getElection, staleTime: 0 })
+            .catch(() => null);
+          if (election?.state === 'CLOSED') {
+            router.replace(ROUTES.closed);
+            return 'navigated';
           }
           return 'stayed';
         }
         if (outcome.refetch) {
-          await queryClient.invalidateQueries({
-            queryKey: outcome.refetch === 'me' ? queryKeys.voter.me : queryKeys.election,
-          });
+          await queryClient.invalidateQueries({ queryKey: queryKeys.voter.me });
         }
         router.replace(outcome.to);
         return 'navigated';
@@ -125,17 +124,16 @@ export function VotingProvider({ children }: { children: ReactNode }) {
     if (inflight.current || !selectedId) return 'skipped';
     inflight.current = true;
     try {
-      const vote =
-        pendingVote?.candidateId === selectedId
-          ? pendingVote
-          : { candidateId: selectedId, idempotencyKey: newKey() };
-      return await send(vote);
+      return await send({ candidateId: selectedId });
     } finally {
       inflight.current = false;
     }
-  }, [pendingVote, selectedId, send]);
+  }, [selectedId, send]);
 
-  /** V4 "Try again": check the voter's status first, then resend with the same Idempotency-Key. */
+  /**
+   * V4 "Try again": check `has_voted` first (Design notes: Submit errors; backend note 3), so a
+   * vote that did get stored before the connection dropped is never sent twice.
+   */
   const retry = useCallback(async (): Promise<SubmitResult> => {
     if (inflight.current || !pendingVote) return 'skipped';
     inflight.current = true;

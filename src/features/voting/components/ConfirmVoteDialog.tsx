@@ -1,7 +1,8 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+
 import { PersonIcon } from '@/components/icons/PersonIcon';
-import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { Spinner } from '@/components/ui/Spinner';
@@ -12,6 +13,15 @@ import { MOBILE_QUERY, useMediaQuery } from '@/lib/hooks/useMediaQuery';
 import { formatCandidateNumber } from '@/lib/utils/format';
 
 const copy = content.confirm;
+
+/**
+ * Mobile only, so Vaul (≈ 8 KB Brotli) stays out of the desktop first load (JS budget). On a phone
+ * the sheet is mounted closed as soon as the list renders, so it has loaded before it is opened.
+ */
+const BottomSheet = dynamic(
+  () => import('@/components/ui/BottomSheet').then((module) => module.BottomSheet),
+  { ssr: false },
+);
 
 interface ConfirmVoteDialogProps {
   candidate: Candidate;

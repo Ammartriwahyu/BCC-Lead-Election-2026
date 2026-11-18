@@ -3,7 +3,7 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 
 import { clearSessionEnding } from '@/features/auth/sessionEnding';
-import { resetDb } from '@/mocks/db';
+import { DEFAULT_OPTIONS, resetDb } from '@/mocks/db';
 import { server } from '@/mocks/node';
 import { clearCookieJar, installCookieJar } from '@/test/cookieJar';
 import { resetNavigation } from '@/test/navigation';
@@ -35,7 +35,8 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  resetDb();
+  // Default data for every test, also after one that changed candidate set / voter count failed.
+  resetDb(DEFAULT_OPTIONS);
   clearCookieJar();
   resetNavigation();
   clearSessionEnding();

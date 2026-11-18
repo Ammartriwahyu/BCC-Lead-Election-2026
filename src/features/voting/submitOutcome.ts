@@ -3,8 +3,10 @@ import { isApiError } from '@/lib/api/errors';
 
 /** What the UI does after a failed POST /votes (spec §4.2, docs/API_CONTRACT.md). */
 export type SubmitFailure =
-  | { kind: 'navigate'; to: string; refetch: 'me' | 'election' | null }
-  | { kind: 'stay'; refetch: 'election' | 'candidates' }
+  | { kind: 'navigate'; to: string; refetch: 'me' | null }
+  | { kind: 'stay'; refetch: 'candidates' }
+  /** VOTING_NOT_OPEN covers "not opened yet" and "already closed": the fresh state decides. */
+  | { kind: 'not-open' }
   | { kind: 'session' };
 
 export function classifySubmitError(error: unknown): SubmitFailure {
@@ -12,10 +14,8 @@ export function classifySubmitError(error: unknown): SubmitFailure {
   switch (error.code) {
     case 'ALREADY_VOTED':
       return { kind: 'navigate', to: ROUTES.alreadyVoted, refetch: 'me' };
-    case 'VOTING_CLOSED':
-      return { kind: 'navigate', to: ROUTES.closed, refetch: 'election' };
     case 'VOTING_NOT_OPEN':
-      return { kind: 'stay', refetch: 'election' };
+      return { kind: 'not-open' };
     case 'VALIDATION':
     case 'NOT_FOUND':
       // The candidate list changed under the voter: drop the pick and reload it.

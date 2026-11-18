@@ -1,6 +1,5 @@
-import Image from 'next/image';
-
 import { PersonIcon } from '@/components/icons/PersonIcon';
+import { CandidateImage } from '@/components/ui/CandidateImage';
 import { content } from '@/content/copy';
 import { cx } from '@/lib/utils/cx';
 
@@ -40,13 +39,7 @@ export function CandidatePhoto({
       )}
     >
       {photoUrl ? (
-        <Image
-          src={photoUrl}
-          alt={content.candidates.photoAlt(name)}
-          fill
-          sizes={sizes}
-          className="object-cover"
-        />
+        <CandidateImage src={photoUrl} alt={content.candidates.photoAlt(name)} sizes={sizes} />
       ) : (
         <>
           <PersonIcon className={cx('text-primary-300', iconClassName)} />

@@ -14,15 +14,50 @@ describe('request', () => {
     await expect(request('/ping', { schema })).resolves.toEqual({ ok: true });
   });
 
-  it('maps backend error codes', async () => {
+  it('maps backend error codes, fields, Retry-After and a new OTP flow', async () => {
     server.use(
-      http.get('*/api/ping', () =>
-        HttpResponse.json({ error: { code: 'VOTING_CLOSED' } }, { status: 409 }),
+      http.get('*/api/a', () =>
+        HttpResponse.json({ error: { code: 'NOT_REGISTERED' } }, { status: 403 }),
+      ),
+      http.get('*/api/b', () =>
+        HttpResponse.json({ error: { code: 'INVALID_STATE' } }, { status: 409 }),
+      ),
+      http.get('*/api/c', () =>
+        HttpResponse.json(
+          { error: { code: 'VALIDATION_FAILED', fields: { vision: 'required' } } },
+          { status: 422 },
+        ),
+      ),
+      http.get('*/api/d', () =>
+        HttpResponse.json(
+          { error: { code: 'RATE_LIMITED' } },
+          { status: 429, headers: { 'Retry-After': '12' } },
+        ),
+      ),
+      http.get('*/api/e', () =>
+        HttpResponse.json(
+          {
+            error: { code: 'OTP_INVALID' },
+            flow: 'next-flow',
+            devices: [{ id: 'd1', name: 'Phone', default: true }],
+          },
+          { status: 401 },
+        ),
       ),
     );
-    await expect(request('/ping', { schema })).rejects.toMatchObject({
-      code: 'VOTING_CLOSED',
-      status: 409,
+    await expect(request('/a', { schema })).rejects.toMatchObject({ code: 'NOT_A_VOTER' });
+    await expect(request('/b', { schema })).rejects.toMatchObject({ code: 'STATE_CONFLICT' });
+    await expect(request('/c', { schema })).rejects.toMatchObject({
+      code: 'VALIDATION',
+      fields: { vision: 'required' },
+    });
+    await expect(request('/d', { schema })).rejects.toMatchObject({
+      code: 'RATE_LIMITED',
+      retryAfterSeconds: 12,
+    });
+    await expect(request('/e', { schema, skipAuthRedirect: true })).rejects.toMatchObject({
+      code: 'OTP_INVALID',
+      otp: { flow: 'next-flow', devices: [{ id: 'd1', name: 'Phone', isDefault: true }] },
     });
   });
 
