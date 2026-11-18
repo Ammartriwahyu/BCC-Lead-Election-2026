@@ -217,6 +217,14 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Pages with the sticky voter navbar (64 / 88 px): focused or scrolled-to items stay below it. */
+  html:has([data-sticky-navbar]) {
+    scroll-padding-top: calc(var(--spacing) * 64);
+    @variant md {
+      scroll-padding-top: calc(var(--spacing) * 88);
+    }
+  }
+
   body {
     background-color: var(--color-bg-page);
     color: var(--color-text-primary);
