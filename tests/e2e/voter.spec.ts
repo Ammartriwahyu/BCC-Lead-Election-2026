@@ -2,6 +2,8 @@
  * Voter flows (spec §4.1–4.3). Runs on desktop Chrome, Pixel 7 and iPhone 14.
  * The mock database is shared, so every test starts by applying a scenario.
  */
+import type { Page } from '@playwright/test';
+
 import { expect, test } from '../fixtures';
 import { ACCOUNTS, applyScenario, DEMO_OTP_CODE, getMockState } from './helpers';
 import { committee, reviewButton, signIn, submitVoteButton } from './voter-helpers';
@@ -338,5 +340,47 @@ test.describe('booth mode', () => {
     await expect(page).toHaveURL(/\/candidates$/);
     await expect(page.getByRole('button', { name: /^Selected / })).toHaveCount(0);
     await expect(reviewButton(page)).toBeDisabled();
+  });
+});
+
+test.describe('live state: one stream, polling only as a fallback', () => {
+  /** Polls of GET /api/election (the stream lives at /api/election/stream). */
+  function trackPolls(page: Page) {
+    const seen = { polls: 0, streams: 0 };
+    page.on('request', (request) => {
+      const path = new URL(request.url()).pathname;
+      if (path === '/api/election') seen.polls += 1;
+      if (path === '/api/election/stream') seen.streams += 1;
+    });
+    return seen;
+  }
+
+  test('the voter pages follow closing over /election/stream without polling', async ({
+    page,
+    request,
+  }) => {
+    await applyScenario(request, 'open');
+    const seen = trackPolls(page);
+    await signIn(page);
+    await expect(page).toHaveURL(/\/candidates$/);
+    await expect.poll(() => seen.streams).toBe(1);
+
+    // No polling while the stream is open (11 s would be two polls).
+    const before = seen.polls;
+    await page.waitForTimeout(11_000);
+    expect(seen.polls - before).toBe(0);
+
+    // Pushed by the stream: well under the 5 s poll.
+    await committee(request, 'close');
+    await expect(page).toHaveURL(/\/closed$/, { timeout: 2_500 });
+  });
+
+  test('without the stream the voter pages keep polling', async ({ page, request }) => {
+    await applyScenario(request, 'open');
+    await page.route('**/api/election/stream', (route) => route.abort());
+    await signIn(page);
+    await expect(page).toHaveURL(/\/candidates$/);
+    await committee(request, 'close');
+    await expect(page).toHaveURL(/\/closed$/, { timeout: 8_000 });
   });
 });

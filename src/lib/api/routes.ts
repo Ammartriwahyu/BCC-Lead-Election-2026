@@ -12,6 +12,7 @@ export const API_ROUTES = {
   voterOtp: { method: 'POST', path: '/auth/otp' },
   voterSignOut: { method: 'POST', path: '/auth/logout' },
   getMe: { method: 'GET', path: '/me' },
+  streamElection: { method: 'GET', path: '/election/stream', event: 'election' },
   getCandidates: { method: 'GET', path: '/candidates' },
   submitVote: { method: 'POST', path: '/votes' },
   adminSignIn: { method: 'POST', path: '/admin/auth/login' },

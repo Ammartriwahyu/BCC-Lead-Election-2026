@@ -152,6 +152,14 @@ export const ENDPOINTS = {
     response: voterMeDtoSchema,
     errors: [],
   },
+  streamElection: {
+    ...API_ROUTES.streamElection,
+    auth: 'voter',
+    status: 200,
+    response: null,
+    stream: { event: 'election', data: electionDtoSchema },
+    errors: ['TOO_MANY_STREAMS', 'STREAM_UNAVAILABLE'],
+  },
   getCandidates: {
     ...API_ROUTES.getCandidates,
     auth: 'voter',

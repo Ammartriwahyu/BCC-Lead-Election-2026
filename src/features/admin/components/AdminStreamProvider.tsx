@@ -3,11 +3,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 
+import { STREAM } from '@/config/constants';
 import { subscribeAdmin } from '@/lib/api/endpoints';
 import type { AdminOverview } from '@/lib/api/types';
 import { queryKeys } from '@/lib/query/keys';
+import { createFallbackStream } from '@/lib/stream/fallbackStream';
 
-import { AdminStreamContext, createAdminStream, overviewChanges } from '../adminStream';
+import { AdminStreamContext, overviewChanges } from '../adminStream';
 
 /**
  * Opens /admin/stream once for the whole committee panel. Each `overview` event replaces the
@@ -20,14 +22,14 @@ export function AdminStreamProvider({ children }: { children: ReactNode }) {
   const [streaming, setStreaming] = useState(false);
 
   useEffect(() => {
-    const stream = createAdminStream(
-      { subscribe: subscribeAdmin },
+    const stream = createFallbackStream(
+      { subscribe: subscribeAdmin, retryMs: STREAM.retryMs },
       {
         onStreaming: (open) => {
           setStreaming(open);
           if (!open) void queryClient.invalidateQueries({ queryKey: queryKeys.admin.overview });
         },
-        onOverview: (next) => {
+        onEvent: (next) => {
           const previous = queryClient.getQueryData<AdminOverview>(queryKeys.admin.overview);
           queryClient.setQueryData(queryKeys.admin.overview, next);
           const changed = overviewChanges(previous, next);

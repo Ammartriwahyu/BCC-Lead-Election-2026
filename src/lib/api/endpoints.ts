@@ -477,34 +477,56 @@ export async function getDisplay(signal?: AbortSignal): Promise<DisplayPayload> 
   return toDisplayPayload(dto);
 }
 
-/* ---------- committee stream ---------- */
+/* ---------- live streams (committee panel, voter pages) ---------- */
 
-export interface AdminSubscription {
+export interface StreamSubscription<T> {
   onOpen: () => void;
-  onOverview: (overview: AdminOverview) => void;
+  onEvent: (value: T) => void;
   onError: () => void;
+}
+
+/** Opens a registry stream. Null without EventSource; a message that does not parse is dropped. */
+function subscribe<T>(
+  route: { path: string; event: string },
+  parse: (data: unknown) => T,
+  handlers: StreamSubscription<T>,
+): EventStreamHandle | null {
+  return openEventStream(route.path, route.event, {
+    onOpen: handlers.onOpen,
+    onEvent: (data) => {
+      let value: T;
+      try {
+        value = parse(JSON.parse(data));
+      } catch {
+        return;
+      }
+      handlers.onEvent(value);
+    },
+    onError: handlers.onError,
+  });
 }
 
 /**
  * Live overview for the committee (`event: overview` on /admin/stream, the same body as
  * GET /admin/overview), sent whenever the state, the turnout or the screen on air changes.
- * Null without EventSource. A message that does not match the contract is dropped.
  */
-export function subscribeAdmin(handlers: AdminSubscription): EventStreamHandle | null {
-  return openEventStream(API_ROUTES.streamAdmin.path, API_ROUTES.streamAdmin.event, {
-    onOpen: handlers.onOpen,
-    onEvent: (data) => {
-      let overview: AdminOverview;
-      try {
-        overview = toAdminOverview(adminOverviewDtoSchema.parse(JSON.parse(data)));
-      } catch {
-        return;
-      }
-      handlers.onOverview(overview);
-    },
-    onError: handlers.onError,
-  });
-}
+export const subscribeAdmin = (handlers: StreamSubscription<AdminOverview>) =>
+  subscribe(
+    API_ROUTES.streamAdmin,
+    (data) => toAdminOverview(adminOverviewDtoSchema.parse(data)),
+    handlers,
+  );
+
+/**
+ * Election state for a signed-in voter (`event: election` on /election/stream, the same body as
+ * GET /election), sent on connect and on every open / close / reopen.
+ */
+export const subscribeElection = (handlers: StreamSubscription<Election>) =>
+  subscribe(
+    API_ROUTES.streamElection,
+    (data) => toElection(electionDtoSchema.parse(data)),
+    handlers,
+  );
 
 export const DISPLAY_STREAM_PATH = API_ROUTES.streamDisplay.path;
 export const DISPLAY_STREAM_EVENT = API_ROUTES.streamDisplay.event;

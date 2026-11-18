@@ -469,6 +469,16 @@ export const handlers = [
     return HttpResponse.json({ voter: voterDto(member), election: { status: db.status } });
   }),
 
+  http.get<PathParams, DefaultBodyType, ReadableStream | Record<string, unknown>>(
+    route('streamElection'),
+    ({ request }) => {
+      const auth = authorize(getDb(), request, ['voter']);
+      if (isResponse(auth)) return auth;
+      // Status only (server_time is optional): an event goes out only when the state changes.
+      return eventStream(ENDPOINTS.streamElection.stream.event, () => ({ status: getDb().status }));
+    },
+  ),
+
   http.get(route('getCandidates'), async ({ request }) => {
     await delay(MOCK_LATENCY.defaultMs);
     const db = getDb();

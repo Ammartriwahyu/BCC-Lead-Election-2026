@@ -4,6 +4,8 @@ import type { EndpointName } from './contract';
 export const ENDPOINT_SUMMARIES: Record<EndpointName, string> = {
   getHealth: 'Liveness',
   getElection: 'Voting status for the sign-in page (not_started, open, closed) and server time',
+  streamElection:
+    'Server-sent events for a signed-in voter: the /election body on connect and on every state change (the pages poll instead)',
   getDisplay: 'Payload of the screen on air, nothing else',
   streamDisplay: 'Server-sent events: the /display payload on connect and on every change',
   voterSignIn: 'UB SSO sign-in with NIM or UB email. Either a session or an OTP challenge (2FA)',
@@ -17,7 +19,7 @@ export const ENDPOINT_SUMMARIES: Record<EndpointName, string> = {
   getAdminMe: 'The signed-in committee account',
   getAdminOverview: 'Status, screen on air, candidate count, turnout. Never votes per candidate',
   streamAdmin:
-    'Server-sent events: the /admin/overview payload on change (the panel polls instead)',
+    'Server-sent events: the /admin/overview payload on connect and on change (the panel polls instead)',
   changeElectionState:
     'open (not_started→open, needs 3 complete candidates), close (open→closed), reopen (closed→open)',
   setDisplayScreen: 'Puts a result screen on the public display. Only while closed',

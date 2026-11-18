@@ -5,8 +5,9 @@ import { useEffect, type ReactNode } from 'react';
 
 import { Spinner } from '@/components/ui/Spinner';
 import { content } from '@/content/copy';
-import { useElection } from '@/features/election/useElection';
+import { ElectionPollingContext, useElection } from '@/features/election/useElection';
 import { useElectionAnnouncer } from '@/features/election/useElectionAnnouncer';
+import { useElectionStream } from '@/features/election/useElectionStream';
 import { isVoterPathAllowed, voterHome } from '@/features/election/voterRouting';
 import { useVoting } from '@/features/voting/VotingProvider';
 
@@ -23,14 +24,18 @@ function GateLoading() {
 
 /**
  * Keeps a signed-in voter on a page that is valid for their status and the election state,
- * and follows state changes live (NOT_STARTED → OPEN, OPEN → CLOSED, reopen) without reload.
- * Redirects wait while a vote is being submitted.
+ * and follows state changes live (NOT_STARTED → OPEN, OPEN → CLOSED, reopen) without reload:
+ * over /election/stream, or by polling while there is no stream. Once the voter has voted their
+ * pages no longer depend on the state, so both stop. Redirects wait while a vote is being submitted.
  */
 export function VoterSessionGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const session = useVoterSession();
-  const election = useElection();
+  const follow = session.data?.status !== 'VOTED';
+  const streaming = useElectionStream(follow);
+  const poll = follow && !streaming;
+  const election = useElection({ poll });
   const { justSubmitted, isSubmitting } = useVoting();
   useElectionAnnouncer(election.data?.state);
 
@@ -46,5 +51,5 @@ export function VoterSessionGate({ children }: { children: ReactNode }) {
   }, [allowed, home, isSubmitting, router]);
 
   if (!allowed && !isSubmitting) return <GateLoading />;
-  return <>{children}</>;
+  return <ElectionPollingContext value={poll}>{children}</ElectionPollingContext>;
 }

@@ -8,6 +8,7 @@ import { renderWithProviders } from '@/test/render';
 
 import { ElectionStatusStrip } from './components/ElectionStatusStrip';
 import { electionTransition } from './electionTransition';
+import { ElectionPollingContext, useElection } from './useElection';
 
 describe('electionTransition', () => {
   it('names the transitions voters hear about', () => {
@@ -51,5 +52,44 @@ describe('ElectionStatusStrip', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('useElection', () => {
+  function StateProbe() {
+    const { data } = useElection();
+    return <p data-testid="state">{data?.state}</p>;
+  }
+
+  async function pollsIn(polling: boolean): Promise<number> {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      let requests = 0;
+      server.use(
+        http.get('*/api/election', () => {
+          requests += 1;
+          return undefined;
+        }),
+      );
+      applyScenario('open');
+      renderWithProviders(
+        <ElectionPollingContext value={polling}>
+          <StateProbe />
+        </ElectionPollingContext>,
+      );
+      expect(await screen.findByTestId('state')).toHaveTextContent('OPEN');
+      await vi.advanceTimersByTimeAsync(POLLING.electionStateMs * 3);
+      return requests;
+    } finally {
+      vi.useRealTimers();
+    }
+  }
+
+  it('polls by default', async () => {
+    expect(await pollsIn(true)).toBeGreaterThanOrEqual(3);
+  });
+
+  it('stops polling where the voter gate says the stream (or a cast vote) makes it pointless', async () => {
+    expect(await pollsIn(false)).toBe(1);
   });
 });
