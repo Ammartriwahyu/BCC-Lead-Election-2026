@@ -106,8 +106,11 @@ export const CANDIDATE = {
   visionMax: 280,
   missionsMin: 1,
   missionsMax: 5,
-  /** Spec 4.4: 160 (backend allows 200). */
-  missionMax: 160,
+  /**
+   * The backend limit (spec 4.4 said 160). The committee set no rule of its own (20 Nov 2026,
+   * DEVIATIONS #87), so the form allows what the backend accepts.
+   */
+  missionMax: 200,
   photoMaxBytes: 2 * 1024 * 1024,
   photoTypes: ['image/jpeg', 'image/png'],
   /** Portrait 4:5 (width / height). */

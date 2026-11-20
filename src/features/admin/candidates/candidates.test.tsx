@@ -2,7 +2,9 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { notFound } from 'next/navigation';
+import * as z from 'zod/mini';
 
+import { CANDIDATE } from '@/config/constants';
 import type * as Endpoints from '@/lib/api/endpoints';
 import { getDb, storePhoto } from '@/mocks/db';
 import { route } from '@/mocks/handlers';
@@ -13,7 +15,13 @@ import { navigation, resetNavigation } from '@/test/navigation';
 import { renderWithProviders } from '@/test/render';
 
 import { CandidateFormView } from './CandidateFormView';
-import { ballotOptions, classYearOptions, studyProgramOptions } from './candidateRules';
+import {
+  ballotOptions,
+  candidateFormSchema,
+  classYearOptions,
+  emptyFormValues,
+  studyProgramOptions,
+} from './candidateRules';
 import { CandidatesView } from './CandidatesView';
 import { openVotingBlocker } from './openVoting';
 import { ElectionActionDialog } from '../components/ElectionActionDialog';
@@ -91,6 +99,19 @@ describe('candidate rules', () => {
       'Add a photo for Candidate 03 before opening voting.',
     );
     expect(openVotingBlocker([complete, complete, complete] as never[])).toBeNull();
+  });
+
+  it('accepts mission points up to the backend limit of 200 characters', () => {
+    const missionErrors = (text: string) => {
+      const parsed = z.safeParse(candidateFormSchema, {
+        ...emptyFormValues(),
+        missions: [{ text }],
+      });
+      return parsed.success ? [] : parsed.error.issues.filter((i) => i.path[0] === 'missions');
+    };
+    expect(CANDIDATE.missionMax).toBe(200);
+    expect(missionErrors('a'.repeat(200))).toEqual([]);
+    expect(missionErrors('a'.repeat(201))[0]?.message).toBe('Keep each point to 200 characters.');
   });
 });
 

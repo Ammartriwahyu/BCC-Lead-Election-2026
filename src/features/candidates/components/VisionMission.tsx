@@ -43,7 +43,8 @@ export function VisionMission({ candidate }: { candidate: Candidate }) {
         <ol className="grid flex-1 gap-16 lg:grid-cols-3 lg:gap-24">
           {candidate.missions.map((mission, index) => (
             <li
-              key={mission}
+              // Two points may read the same: the position keeps the keys unique.
+              key={`${String(index)}-${mission}`}
               className="flex gap-16 rounded-xl border border-border-card bg-surface-card p-16 shadow-card lg:min-h-196 lg:flex-col lg:p-24"
             >
               <span aria-hidden="true" className="text-heading-4 text-text-brand lg:text-heading-2">
