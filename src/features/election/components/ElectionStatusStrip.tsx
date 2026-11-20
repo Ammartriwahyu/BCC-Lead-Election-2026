@@ -7,9 +7,13 @@ import { useElection } from '../useElection';
 import { useElectionAnnouncer } from '../useElectionAnnouncer';
 import { ElectionBadge } from './ElectionBadge';
 
-/** Sign-in "Voting status" strip (V0a–c / MV0a–c): primary/700 box with the state badge. */
+/**
+ * Sign-in "Voting status" strip (V0a–c / MV0a–c): primary/700 box with the state badge.
+ * Read when the page loads and when the tab is focused again, not polled: it is only a label
+ * (signing in works in every state, and the pages after sign-in follow the state live).
+ */
 export function ElectionStatusStrip() {
-  const { data } = useElection();
+  const { data } = useElection({ poll: false });
   useElectionAnnouncer(data?.state);
 
   if (!data) {

@@ -1757,6 +1757,93 @@
         ]
       }
     },
+    "/election/stream": {
+      "get": {
+        "operationId": "streamElection",
+        "summary": "Server-sent events for a signed-in voter: the /election body on connect and on every state change (the pages poll instead)",
+        "tags": [
+          "voter"
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events. Each `event: election` carries JSON matching x-event-data",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "x-event-name": "election",
+            "x-event-data": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "not_started",
+                    "open",
+                    "closed"
+                  ]
+                },
+                "server_time": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_STREAMS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "STREAM_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "voterToken": []
+          }
+        ]
+      }
+    },
     "/candidates": {
       "get": {
         "operationId": "getCandidates",
@@ -2235,7 +2322,7 @@
     "/admin/stream": {
       "get": {
         "operationId": "streamAdmin",
-        "summary": "Server-sent events: the /admin/overview payload on change (the panel polls instead)",
+        "summary": "Server-sent events: the /admin/overview payload on connect and on change (the panel polls instead)",
         "tags": [
           "committee"
         ],
@@ -3431,7 +3518,7 @@
     "/admin/results": {
       "get": {
         "operationId": "getAdminResults",
-        "summary": "Votes per candidate, leaders, ties, integrity check. Only while closed",
+        "summary": "Votes per candidate, leaders, ties, integrity check. Live while open, final once closed (committee only)",
         "tags": [
           "committee"
         ],

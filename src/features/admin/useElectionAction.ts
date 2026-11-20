@@ -39,10 +39,8 @@ export function useElectionAction() {
       queryClient.setQueryData<AdminOverview>(queryKeys.admin.overview, (current) =>
         current ? { ...current, election } : current,
       );
-      // Totals lock again the moment voting is not closed.
-      if (election.state !== 'CLOSED') {
-        queryClient.removeQueries({ queryKey: queryKeys.admin.results });
-      }
+      // Totals go on (live while open, final once closed): fetch them again for the new state.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.results });
       announce(copy.announce[action]);
       // The display switched screens on the server; wait so the dialog closes on fresh data.
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.overview });

@@ -100,7 +100,7 @@ export function CandidatesView() {
         ) : null}
 
         {list.length > 0 ? (
-          <ul className="grid gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3 lg:gap-40">
+          <ul className="grid motion-stagger gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3 lg:gap-40">
             {list.map((candidate) => (
               <li key={candidate.id}>
                 <CandidateCard

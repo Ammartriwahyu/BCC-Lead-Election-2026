@@ -1,22 +1,14 @@
 /**
  * Every UI string, in English (BCC website standard). Copy comes from the Figma
  * "Pilketum – v2" frames; entries marked NEW are not in Figma and are listed in docs/DEVIATIONS.md.
+ * Strings the committee panel and the root pages also use live in commonCopy.ts.
  */
+import { commonCopy } from './commonCopy';
+
 export const content = {
-  meta: {
-    title: 'BCC Chairperson Election 2026',
-    description:
-      'Vote for the next chairperson of Basic Computing Community, Universitas Brawijaya.',
-  },
-  brand: {
-    logoAlt: 'BCC — Basic Computing Community',
-    electionName: 'Chairperson Election 2026',
-  },
-  field: {
-    requiredMark: '*',
-    showPassword: 'Show password', // NEW: accessible name of the eye toggle
-    hidePassword: 'Hide password', // NEW
-  },
+  meta: commonCopy.meta,
+  brand: commonCopy.brand,
+  field: commonCopy.field,
   voterNav: {
     signedInAs: 'Signed in as',
     signOut: 'Sign out',
@@ -26,17 +18,13 @@ export const content = {
     copyrightShort: '© 2026 Basic Computing Community',
     organizer: 'Organized by the BCC Election Committee',
   },
-  dialog: {
-    close: 'Close', // NEW: accessible name, never visible
-  },
-  toast: {
-    region: 'Notifications', // NEW: accessible name of the toast list
-  },
+  dialog: commonCopy.dialog,
+  toast: commonCopy.toast,
   offline: {
     banner: "You're offline. Your vote will not be sent until you're back online.", // NEW
   },
   election: {
-    badge: { NOT_STARTED: 'Not started', OPEN: 'Open', CLOSED: 'Closed' },
+    badge: commonCopy.electionBadge,
     /** Sign-in status strip (V0a–c). */
     strip: {
       NOT_STARTED: 'The committee will open voting during the event.',
@@ -64,10 +52,10 @@ export const content = {
     sectionTitle: 'Candidates',
     count: (n: number) => `${n} ${n === 1 ? 'candidate' : 'candidates'} · 1 vote per member`,
     countMobile: '1 vote per member',
-    numberLabel: (n: string) => `Candidate ${n}`,
-    details: (major: string, classYear: number) => `${major}, class of ${classYear}`,
+    numberLabel: commonCopy.candidateNumber,
+    details: commonCopy.candidateDetails,
     photo: 'Candidate photo',
-    photoAlt: (name: string) => `Photo of ${name}`, // NEW
+    photoAlt: commonCopy.candidatePhotoAlt,
     visionMission: 'Vision & mission',
     visionMissionFor: (name: string) => `Vision & mission of ${name}`, // NEW: accessible name
     select: 'Select',
@@ -137,17 +125,7 @@ export const content = {
     idleContinue: "I'm still here",
     idleSignOut: 'Sign out now',
   },
-  loading: 'Loading…', // NEW: screen-reader text for skeletons
-  notFound: {
-    // NEW: 404 page in the V6 style
-    title: 'Page not found',
-    body: "We couldn't find that page. Check the link, or go back to the start.",
-    action: 'Go to sign in',
-  },
-  error: {
-    // NEW: error boundary in the V6 style
-    title: 'Something went wrong',
-    body: 'Try again. If it keeps happening, ask someone from the committee for help.',
-    action: 'Try again',
-  },
+  loading: commonCopy.loading,
+  notFound: commonCopy.notFound,
+  error: commonCopy.error,
 } as const;

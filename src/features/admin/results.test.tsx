@@ -2,6 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 
+import { POLLING } from '@/config/constants';
 import { getAdminOverview } from '@/lib/api/endpoints';
 import { DEFAULT_OPTIONS, getDb, resetDb, setElectionStatus } from '@/mocks/db';
 import { server } from '@/mocks/node';
@@ -14,6 +15,9 @@ import { ResultsView } from './components/ResultsView';
 
 type Scenario = Parameters<typeof applyScenario>[0];
 type Data = Parameters<typeof applyScenario>[1];
+
+/** First lazy import of the Display control card in a test run. */
+const LAZY_LOAD_MS = 5_000;
 
 async function renderResults(scenario: Scenario, data?: Data) {
   applyScenario(scenario, data);
@@ -63,7 +67,10 @@ describe('ResultsView (A4)', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Results' })).toBeInTheDocument();
     expect(screen.getByText('111 votes from 139 registered members.')).toBeInTheDocument();
     expect(screen.getByText(/^Shares are based on 111 valid votes\./)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Display control' })).toBeInTheDocument();
+    // Loads lazily (JS budget).
+    expect(
+      await screen.findByRole('heading', { name: 'Display control' }, { timeout: LAZY_LOAD_MS }),
+    ).toBeInTheDocument();
   });
 
   it('tie: every candidate on the top count is marked, none is singled out', async () => {
@@ -103,34 +110,75 @@ describe('ResultsView (A4)', () => {
     ).toBeInTheDocument();
   });
 
-  it('reopening from Results returns to the overview and drops the totals', async () => {
-    const { user, queryClient } = await renderResults('closed');
+  it('reopening from Results stays on the page and keeps counting live', async () => {
+    const { user } = await renderResults('closed');
     await resultRows();
     await user.click(screen.getByRole('button', { name: 'Reopen voting' }));
     const dialog = await screen.findByRole('dialog', { name: 'Reopen voting?' });
     await user.click(within(dialog).getByRole('button', { name: 'Reopen voting' }));
-    await waitFor(() => {
-      expect(navigation.router.replace).toHaveBeenCalledWith('/admin');
-    });
+    expect(await screen.findByText(/so far from 139 registered members/)).toBeInTheDocument();
     expect(getDb().status).toBe('open');
-    expect(queryClient.getQueryData(['admin', 'results'])).toBeUndefined();
-    expect(screen.queryByText('Candidate Name 01')).not.toBeInTheDocument();
+    expect(navigation.router.replace).not.toHaveBeenCalled();
+    expect(await screen.findByRole('button', { name: 'Close voting' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Export results (.xlsx)' }),
+    ).not.toBeInTheDocument();
   });
 
-  it.each(['not-started', 'open'] as const)(
-    '%s: locked, and candidate totals are never requested',
-    async (scenario) => {
-      const requests = watchResultsRequests();
-      const { user } = await renderResults(scenario);
-      const dialog = await screen.findByRole('dialog', { name: 'Results are locked' });
-      expect(screen.queryByText(/votes/)).not.toBeInTheDocument();
-      await user.click(within(dialog).getByRole('button', { name: 'OK' }));
-      expect(navigation.router.replace).toHaveBeenCalledWith('/admin');
-      expect(requests()).toBe(0);
-    },
-  );
+  it('not started: locked, and candidate totals are never requested', async () => {
+    const requests = watchResultsRequests();
+    const { user } = await renderResults('not-started');
+    const dialog = await screen.findByRole('dialog', { name: 'Results are locked' });
+    expect(screen.queryByText(/\d+ votes?/)).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'OK' }));
+    expect(navigation.router.replace).toHaveBeenCalledWith('/admin');
+    expect(requests()).toBe(0);
+  });
 
-  it('locks again when voting is reopened elsewhere while Results is open', async () => {
+  it('open: live totals that follow new votes, Close voting instead of Export', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      await renderResults('open');
+      const before = await resultRows();
+      expect(before).toHaveLength(3);
+      const votes = getDb().tallies.get(1) ?? 0;
+      expect(
+        screen.getByText(/votes? so far from 139 registered members\. Updates live\./),
+      ).toBeVisible();
+      expect(screen.getByText(/^Live count for the committee/)).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Close voting' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Export results (.xlsx)' }),
+      ).not.toBeInTheDocument();
+
+      // A member votes for candidate 1 in a booth: the row follows on the next poll.
+      getDb().tallies.set(1, votes + 1);
+      await vi.advanceTimersByTimeAsync(POLLING.adminLiveResultsMs);
+      await waitFor(() => {
+        expect(
+          within(screen.getAllByRole('listitem')[0] as HTMLElement).getByText(
+            `${String(votes + 1)} votes`,
+          ),
+        ).toBeInTheDocument();
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('open, but the backend keeps totals until closing: explains instead of failing', async () => {
+    server.use(
+      http.get('*/api/admin/results', () =>
+        HttpResponse.json({ error: { code: 'RESULTS_LOCKED' } }, { status: 409 }),
+      ),
+    );
+    await renderResults('open');
+    expect(await screen.findByText(/^Live results are not available yet/)).toBeVisible();
+    expect(screen.queryByRole('list', { name: 'Results by candidate' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close voting' })).toBeInTheDocument();
+  });
+
+  it('follows a reopen made elsewhere: the final totals turn into the live count', async () => {
     applyScenario('closed');
     await committeeSignIn();
     // This tab still believes voting is closed; the backend has already reopened it.
@@ -139,10 +187,10 @@ describe('ResultsView (A4)', () => {
     setElectionStatus(getDb(), 'open');
     resetNavigation('/admin/results');
     renderWithProviders(<ResultsView />, { queryClient });
-
-    expect(await screen.findByRole('dialog', { name: 'Results are locked' })).toBeInTheDocument();
-    expect(screen.queryByRole('list', { name: 'Results by candidate' })).not.toBeInTheDocument();
-    expect(queryClient.getQueryData(['admin', 'results'])).toBeUndefined();
+    await resultRows();
+    await queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] });
+    expect(await screen.findByText(/so far from 139 registered members/)).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Results are locked' })).not.toBeInTheDocument();
   });
 
   it('shows an error with retry when the totals cannot be loaded', async () => {

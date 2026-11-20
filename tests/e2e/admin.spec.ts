@@ -9,8 +9,8 @@ import { showOnDisplay } from './display-helpers';
 import { ACCOUNTS, applyScenario, getMockState } from './helpers';
 import { committee } from './voter-helpers';
 
-/** Sidebar "Results" while locked: the lock is spoken as ", locked until voting closes". */
-const RESULTS_LOCKED = /^Results\s*, locked until voting closes$/;
+/** Sidebar "Results" while locked: the lock is spoken as ", locked until voting opens". */
+const RESULTS_LOCKED = /^Results\s*, locked until voting opens$/;
 
 async function screenOnAir(request: APIRequestContext): Promise<Record<string, unknown>> {
   return (await (await request.get('/api/display')).json()) as Record<string, unknown>;
@@ -182,18 +182,49 @@ test.describe('voting state', () => {
   });
 });
 
-test.describe('results stay locked until voting closes', () => {
-  test('sidebar and direct URL both explain the lock, and totals are never requested', async ({
+test.describe('live panel: one stream, polling only as a fallback', () => {
+  test('the overview follows a vote over /admin/stream without polling', async ({
     page,
     request,
   }) => {
     await applyScenario(request, 'open');
+    const overviewCalls = trackRequests(page, '/api/admin/overview');
+    const streams = trackRequests(page, '/api/admin/stream');
+    await adminSignIn(page);
+    await expect(statValue(page, 'Votes received')).toHaveText('1');
+    await expect.poll(() => streams.length).toBe(1);
+
+    // Pushed by the stream: well under the 4 s poll.
+    const before = overviewCalls.length;
+    await castVote(request);
+    await expect(statValue(page, 'Votes received')).toHaveText('2', { timeout: 2_000 });
+    // No polling while the stream is open (10 s would be 2–3 polls).
+    await page.waitForTimeout(10_000);
+    expect(overviewCalls.length - before).toBe(0);
+  });
+
+  test('without the stream the panel keeps polling', async ({ page, request }) => {
+    await applyScenario(request, 'open');
+    await page.route('**/api/admin/stream', (route) => route.abort());
+    await adminSignIn(page);
+    await expect(statValue(page, 'Votes received')).toHaveText('1');
+    await castVote(request);
+    await expect(statValue(page, 'Votes received')).toHaveText('2', { timeout: 6_000 });
+  });
+});
+
+test.describe('results: locked before voting opens, live while open', () => {
+  test('sidebar and direct URL both explain the lock, and totals are never requested', async ({
+    page,
+    request,
+  }) => {
+    await applyScenario(request, 'not-started');
     const resultsCalls = trackRequests(page, '/api/admin/results');
     await adminSignIn(page);
 
     await page.getByRole('button', { name: RESULTS_LOCKED }).click();
     const dialog = page.getByRole('dialog', { name: 'Results are locked' });
-    await expect(dialog).toContainText('Candidate totals unlock after voting closes.');
+    await expect(dialog).toContainText('Candidate totals unlock once voting opens.');
     await dialog.getByRole('button', { name: 'OK' }).click();
     await expect(page).toHaveURL(/\/admin$/);
 
@@ -209,6 +240,46 @@ test.describe('results stay locked until voting closes', () => {
     const direct = await page.request.get('/api/admin/results');
     expect(direct.status()).toBe(409);
     expect(await direct.json()).toMatchObject({ error: { code: 'RESULTS_LOCKED' } });
+  });
+
+  test('while voting is open the committee watches the count grow, anonymously', async ({
+    page,
+    request,
+  }) => {
+    await applyScenario(request, 'open');
+    await adminSignIn(page);
+    await page.getByRole('link', { name: 'Results', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/results$/);
+    await expect(
+      page.getByText('1 vote so far from 139 registered members. Updates live.'),
+    ).toBeVisible();
+
+    // A member votes in a booth: the count follows within a few seconds, without a reload.
+    await castVote(request);
+    await expect(
+      page.getByText('2 votes so far from 139 registered members. Updates live.'),
+    ).toBeVisible({
+      timeout: 6_000,
+    });
+    // Only totals per candidate: no name of a voter anywhere on the page.
+    await expect(page.getByText(/Demo Voter|voter@bcc\.test/)).toHaveCount(0);
+
+    // The display and the export still wait for closing.
+    await expect(page.getByRole('button', { name: 'Export results (.xlsx)' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Show on display: Final results' })).toHaveCount(
+      0,
+    );
+    const exported = await page.request.get('/api/admin/results/export');
+    expect(exported.status()).toBe(409);
+
+    // Closing from the Results page keeps it open with the final count.
+    await page.getByRole('button', { name: 'Close voting' }).click();
+    await page
+      .getByRole('dialog', { name: 'Close voting now?' })
+      .getByRole('button', { name: 'Close voting' })
+      .click();
+    await expect(page.getByText('2 votes from 139 registered members.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Export results (.xlsx)' })).toBeVisible();
   });
 });
 
@@ -335,7 +406,7 @@ test.describe('results and display control', () => {
     await expect.poll(async () => (await screenOnAir(request)).screen).toBe('final_results');
   });
 
-  test('reopening from Results goes back to the overview and locks results again', async ({
+  test('reopening from Results stays on Results and switches to the live count', async ({
     page,
     request,
   }) => {
@@ -348,11 +419,13 @@ test.describe('results and display control', () => {
     await expect(dialog).toContainText("28 members haven't voted yet");
     await dialog.getByRole('button', { name: 'Reopen voting' }).click();
 
-    await expect(page).toHaveURL(/\/admin$/);
+    await expect(page).toHaveURL(/\/admin\/results$/);
     await expect(page.getByRole('button', { name: 'Close voting' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(statValue(page, 'Votes received')).toHaveText('111');
-    await expect(page.getByRole('button', { name: RESULTS_LOCKED })).toBeVisible();
+    await expect(
+      page.getByText('111 votes so far from 139 registered members. Updates live.'),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Export results (.xlsx)' })).toHaveCount(0);
     await expect(displayRow(page, 'VOTING_OPEN')).toContainText('On screen');
     const state = await getMockState(request);
     expect(state.status).toBe('open');

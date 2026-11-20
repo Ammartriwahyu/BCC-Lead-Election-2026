@@ -4,7 +4,7 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { CandidateImage } from '@/components/ui/CandidateImage';
 import { ROUTES } from '@/config/constants';
 import { candidatesCopy } from '@/content/candidatesCopy';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import type { Candidate } from '@/lib/api/types';
 
 import { isCandidateComplete } from './openVoting';
@@ -34,7 +34,7 @@ export function CandidateRow({ candidate, editable }: CandidateRowProps) {
         {candidate.photoUrl ? (
           <CandidateImage
             src={candidate.photoUrl}
-            alt={content.candidates.photoAlt(candidate.name)}
+            alt={commonCopy.candidatePhotoAlt(candidate.name)}
             sizes="64px"
           />
         ) : (

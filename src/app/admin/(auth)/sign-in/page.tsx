@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import committeePhoto from '@/assets/admin/committee-photo.webp';
 import { Logo } from '@/components/layout/Logo';
 import { adminCopy } from '@/content/adminCopy';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { AdminSignInForm } from '@/features/admin/components/AdminSignInForm';
 
 export const metadata: Metadata = { title: adminCopy.signIn.pageTitle };
@@ -33,7 +33,7 @@ export default function AdminSignInPage() {
         />
         <span aria-hidden="true" className="absolute inset-0 bg-primary-800/55" />
         <Logo size="sidebar" className="relative" />
-        <p className="relative text-heading-3 text-text-on-dark">{content.brand.electionName}</p>
+        <p className="relative text-heading-3 text-text-on-dark">{commonCopy.brand.electionName}</p>
       </div>
       <main className="flex w-full flex-col justify-center px-16 py-48 md:px-40 lg:w-1/2 lg:shrink-0 lg:py-64 xl:px-64 2xl:w-746 2xl:px-100">
         <div className="mx-auto flex w-full max-w-546 flex-col gap-32">

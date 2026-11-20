@@ -70,6 +70,9 @@ for (const width of WIDTHS) {
     });
 
     test('status screens', async ({ page, request }) => {
+      // Four screens (V4, V5, V6, V5b), each with axe, a full-page screenshot and its entrance
+      // animations settled: longer than the default 30 s on narrow widths.
+      test.slow();
       await applyScenario(request, 'submit-fails');
       await signIn(page);
       await page.getByRole('button', { name: 'Select Candidate Name 01' }).click();

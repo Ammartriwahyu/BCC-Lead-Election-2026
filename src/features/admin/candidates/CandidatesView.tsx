@@ -71,7 +71,7 @@ export function CandidatesView() {
           {editable ? addButton : null}
         </section>
       ) : (
-        <ul aria-label={copy.title} className="flex flex-col gap-16">
+        <ul aria-label={copy.title} className="flex motion-stagger flex-col gap-16">
           {list.map((candidate) => (
             <CandidateRow key={candidate.id} candidate={candidate} editable={editable} />
           ))}

@@ -17,7 +17,7 @@ export function CandidatesHero({ open }: { open: boolean }) {
       className="relative isolate flex items-end gap-8 overflow-hidden bg-bg-navy page-gutter pt-24 md:gap-48 md:pt-48"
     >
       <Decoration corner="top-right" className="absolute -top-56 -right-112 -z-10 hidden lg:grid" />
-      <div className="flex min-w-0 flex-1 flex-col items-start gap-10 pb-24 md:gap-16 md:pb-48">
+      <div className="flex min-w-0 flex-1 motion-stagger flex-col items-start gap-10 pb-24 md:gap-16 md:pb-48">
         <ElectionBadge state={open ? 'OPEN' : 'NOT_STARTED'} />
         <h1
           id="candidates-hero-title"
@@ -36,8 +36,18 @@ export function CandidatesHero({ open }: { open: boolean }) {
           )}
         </p>
       </div>
-      <Brace pose={open ? 'hello' : 'woah'} width={96} eager className="md:hidden" />
-      <Brace pose={open ? 'hello' : 'woah'} width={220} eager className="hidden md:block" />
+      <Brace
+        pose={open ? 'hello' : 'woah'}
+        width={96}
+        eager
+        className="animate-pop-in [--stagger-i:2] motion-follow md:hidden"
+      />
+      <Brace
+        pose={open ? 'hello' : 'woah'}
+        width={220}
+        eager
+        className="hidden animate-pop-in [--stagger-i:2] motion-follow md:block"
+      />
     </section>
   );
 }

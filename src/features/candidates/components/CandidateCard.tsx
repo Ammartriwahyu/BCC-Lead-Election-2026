@@ -46,7 +46,7 @@ export function CandidateCard({
       data-status={status}
       inert={preview}
       className={cx(
-        'flex flex-col gap-16 rounded-xl p-16 shadow-card md:pb-20',
+        'flex motion-lift flex-col gap-16 rounded-xl p-16 shadow-card md:pb-20',
         selected
           ? 'border-2 border-border-brand bg-bg-subtle'
           : 'border border-border-card bg-surface-card',

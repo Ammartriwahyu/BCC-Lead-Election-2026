@@ -40,6 +40,7 @@ describe('checkContract against the mock backend', () => {
     expect(find(results, 'getAdminResults (RESULTS_LOCKED)')?.status).toBe('pass');
     expect(find(results, 'streamDisplay')?.status).toBe('pass');
     expect(find(results, 'streamAdmin')?.status).toBe('pass');
+    expect(find(results, 'streamElection')?.status).toBe('pass');
     expect(find(results, 'voter token on /admin')?.status).toBe('pass');
     expect(find(results, 'submitVote')?.status).toBe('skip');
   });

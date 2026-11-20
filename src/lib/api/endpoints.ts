@@ -321,16 +321,19 @@ export async function getAdminMe(): Promise<AdminMe> {
   return toAdminMe(await call('getAdminMe', adminMeDtoSchema));
 }
 
+type AdminOverviewDto = z.output<typeof adminOverviewDtoSchema>;
+
+const toAdminOverview = (dto: AdminOverviewDto): AdminOverview => ({
+  election: toElection(dto),
+  turnout: toTurnout(dto.turnout),
+  candidateCount: dto.candidates,
+  display: { activeScreen: SCREEN[dto.display_screen] },
+  // Older backends without the field: voting has opened once if opened_at was ever set.
+  candidatesLocked: dto.candidates_locked ?? dto.opened_at !== null,
+});
+
 export async function getAdminOverview(): Promise<AdminOverview> {
-  const dto = await call('getAdminOverview', adminOverviewDtoSchema);
-  return {
-    election: toElection(dto),
-    turnout: toTurnout(dto.turnout),
-    candidateCount: dto.candidates,
-    display: { activeScreen: SCREEN[dto.display_screen] },
-    // Older backends without the field: voting has opened once if opened_at was ever set.
-    candidatesLocked: dto.candidates_locked ?? dto.opened_at !== null,
-  };
+  return toAdminOverview(await call('getAdminOverview', adminOverviewDtoSchema));
 }
 
 /** The status each action starts from, sent as `expected_status` so a stale click is refused. */
@@ -473,6 +476,57 @@ export async function getDisplay(signal?: AbortSignal): Promise<DisplayPayload> 
   });
   return toDisplayPayload(dto);
 }
+
+/* ---------- live streams (committee panel, voter pages) ---------- */
+
+export interface StreamSubscription<T> {
+  onOpen: () => void;
+  onEvent: (value: T) => void;
+  onError: () => void;
+}
+
+/** Opens a registry stream. Null without EventSource; a message that does not parse is dropped. */
+function subscribe<T>(
+  route: { path: string; event: string },
+  parse: (data: unknown) => T,
+  handlers: StreamSubscription<T>,
+): EventStreamHandle | null {
+  return openEventStream(route.path, route.event, {
+    onOpen: handlers.onOpen,
+    onEvent: (data) => {
+      let value: T;
+      try {
+        value = parse(JSON.parse(data));
+      } catch {
+        return;
+      }
+      handlers.onEvent(value);
+    },
+    onError: handlers.onError,
+  });
+}
+
+/**
+ * Live overview for the committee (`event: overview` on /admin/stream, the same body as
+ * GET /admin/overview), sent whenever the state, the turnout or the screen on air changes.
+ */
+export const subscribeAdmin = (handlers: StreamSubscription<AdminOverview>) =>
+  subscribe(
+    API_ROUTES.streamAdmin,
+    (data) => toAdminOverview(adminOverviewDtoSchema.parse(data)),
+    handlers,
+  );
+
+/**
+ * Election state for a signed-in voter (`event: election` on /election/stream, the same body as
+ * GET /election), sent on connect and on every open / close / reopen.
+ */
+export const subscribeElection = (handlers: StreamSubscription<Election>) =>
+  subscribe(
+    API_ROUTES.streamElection,
+    (data) => toElection(electionDtoSchema.parse(data)),
+    handlers,
+  );
 
 export const DISPLAY_STREAM_PATH = API_ROUTES.streamDisplay.path;
 export const DISPLAY_STREAM_EVENT = API_ROUTES.streamDisplay.event;

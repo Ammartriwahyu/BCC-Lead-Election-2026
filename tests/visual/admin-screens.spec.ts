@@ -57,12 +57,19 @@ for (const width of WIDTHS) {
       await page.waitForTimeout(400);
       await check(page, 'O-open-voting', width);
       await page.keyboard.press('Escape');
+      // Below 1024 px the sidebar lives in the drawer (DEVIATIONS #13).
+      if (width < DESKTOP_MIN) await page.getByRole('button', { name: 'Open menu' }).click();
+      await page.getByRole('button', { name: /^Results\s*, locked/ }).click();
+      await expect(page.getByRole('dialog', { name: 'Results are locked' })).toBeVisible();
+      await page.waitForTimeout(400);
+      await check(page, 'O-results-locked', width);
+      await page.keyboard.press('Escape');
       await page.goto('/admin/voters');
       await expect(page.getByRole('table')).toBeVisible();
       await check(page, 'A5-voters-not-started', width);
     });
 
-    test('A2 overview open, close dialog, results locked, voter list states', async ({
+    test('A2 overview open, close dialog, live results, voter list states', async ({
       page,
       request,
     }) => {
@@ -75,13 +82,10 @@ for (const width of WIDTHS) {
       await page.waitForTimeout(400);
       await check(page, 'O-close-voting', width);
       await page.keyboard.press('Escape');
-      // Below 1024 px the sidebar lives in the drawer (DEVIATIONS #13).
-      if (width < DESKTOP_MIN) await page.getByRole('button', { name: 'Open menu' }).click();
-      await page.getByRole('button', { name: /^Results\s*, locked/ }).click();
-      await expect(page.getByRole('dialog', { name: 'Results are locked' })).toBeVisible();
-      await page.waitForTimeout(400);
-      await check(page, 'O-results-locked', width);
-      await page.keyboard.press('Escape');
+      // Live results while voting is open (DEVIATIONS #86).
+      await page.goto('/admin/results');
+      await expect(page.getByText(/so far from 139 registered members/)).toBeVisible();
+      await check(page, 'A4-results-live', width);
 
       await page.goto('/admin/voters');
       await expect(page.getByRole('table')).toBeVisible();

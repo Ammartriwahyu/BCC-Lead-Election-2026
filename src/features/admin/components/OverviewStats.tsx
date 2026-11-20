@@ -40,7 +40,7 @@ export function OverviewStats({ overview }: { overview: AdminOverview }) {
   return (
     <div
       className={cx(
-        'grid gap-20',
+        'grid motion-stagger gap-20',
         stats.length === 3 ? 'md:grid-cols-3' : 'grid-cols-2 xl:grid-cols-4',
       )}
     >

@@ -82,7 +82,7 @@ function TiedLeaders({ leaders, validVotes }: { leaders: CandidateTally[]; valid
   return (
     <div className="flex flex-col gap-40">
       <h1 className="text-heading-2 text-orange-300">{copy.tiedLabel}</h1>
-      <ul className="flex flex-wrap gap-x-48 gap-y-40">
+      <ul className="flex motion-stagger flex-wrap gap-x-48 gap-y-40">
         {leaders.map((tally) => (
           <li key={tally.candidateId} className="flex w-720 items-center gap-32">
             <DisplayPhoto name={tally.name} photoUrl={tally.photoUrl} size={160} tone="highlight" />

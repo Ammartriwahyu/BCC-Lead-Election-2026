@@ -13,7 +13,7 @@ import { useAdminResults } from '../useAdminResults';
 import { AdminLoadError } from './AdminLoadError';
 import { AdminPageHeader } from './AdminPageHeader';
 import { AdminPageSkeleton } from './AdminPageSkeleton';
-import { DisplayControlCard } from './DisplayControlCard';
+import { LazyDisplayControlCard } from './LazyDisplayControlCard';
 import { LazyElectionActionDialog } from './LazyElectionActionDialog';
 import { OverviewStats } from './OverviewStats';
 import { TurnoutCard } from './TurnoutCard';
@@ -36,7 +36,7 @@ const NEXT_ACTION: Record<ElectionState, ElectionAction> = {
 export function OverviewView() {
   const overview = useAdminOverview();
   const state = overview.data?.election.state;
-  const results = useAdminResults(state);
+  const results = useAdminResults(state, 'final');
   const [dialogOpen, setDialogOpen] = useState(false);
   // The action is fixed when the dialog opens, so its text cannot switch while it closes.
   const [dialogAction, setDialogAction] = useState<ElectionAction>('open');
@@ -77,7 +77,7 @@ export function OverviewView() {
       />
       <OverviewStats overview={overview.data} />
       {election.state === 'OPEN' ? <TurnoutCard turnout={turnout} /> : null}
-      <DisplayControlCard overview={overview.data} results={results.data?.results} />
+      <LazyDisplayControlCard overview={overview.data} results={results.data?.results} />
       <VotingStatusCard state={election.state} />
       <LazyElectionActionDialog
         action={dialogAction}

@@ -288,10 +288,15 @@ describe('committee', () => {
     });
   });
 
-  it('keeps results and the export locked until voting closes', async () => {
-    applyScenario('open');
+  it('locks results before voting opens, live while open, export only once closed', async () => {
+    applyScenario('not-started');
     await adminSignIn(ADMIN.username, ADMIN.password);
     await expect(getAdminResults()).rejects.toMatchObject({ code: 'RESULTS_LOCKED', status: 409 });
+    await changeElectionState('open');
+    // Live totals for the committee while voting is open; the export still waits.
+    const live = await getAdminResults();
+    expect(live.election.state).toBe('OPEN');
+    expect(live.results.validVotes).toBe(live.turnout.votesReceived);
     await expect(exportResults()).rejects.toMatchObject({ code: 'RESULTS_LOCKED' });
     await changeElectionState('close');
     const results = await getAdminResults();

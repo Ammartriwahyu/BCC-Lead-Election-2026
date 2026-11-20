@@ -9,7 +9,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { ToastProvider } from '@/components/ui/Toaster';
 import { ROUTES } from '@/config/constants';
 import { adminNavCopy } from '@/content/adminCopy';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { SessionExpiryListener } from '@/features/auth/components/SessionExpiryListener';
 import { hasErrorCode } from '@/lib/api/errors';
 
@@ -18,6 +18,7 @@ import { useAdminOverview } from '../useAdminOverview';
 import { useAdminSession } from '../useAdminSession';
 import { useAdminSignOut } from '../useAdminSignOut';
 import { AdminLoadError } from './AdminLoadError';
+import { AdminStreamProvider } from './AdminStreamProvider';
 import { ResultsLockedDialog } from './ResultsLockedDialog';
 
 const PAGE_NAMES: Record<AdminSection, string> = {
@@ -46,7 +47,7 @@ function ShellBody({ children }: { children: ReactNode }) {
     return (
       <div role="status" className="flex min-h-dvh items-center justify-center">
         <Spinner size={48} />
-        <span className="sr-only">{content.loading}</span>
+        <span className="sr-only">{commonCopy.loading}</span>
       </div>
     );
   }
@@ -56,8 +57,10 @@ function ShellBody({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col bg-bg-page lg:flex-row">
       <AdminSidebar
         active={section}
-        // Locked until the backend says CLOSED, also while the state is still loading.
-        resultsLocked={overview.data?.election.state !== 'CLOSED'}
+        // Locked until voting has opened (live totals), also while the state is still loading.
+        resultsLocked={
+          overview.data?.election.state !== 'OPEN' && overview.data?.election.state !== 'CLOSED'
+        }
         onResultsLocked={() => {
           setLockedOpen(true);
         }}
@@ -81,13 +84,16 @@ function ShellBody({ children }: { children: ReactNode }) {
 
 /**
  * Frame of every committee page (A1–A5): sidebar 263, content with the topbar, toasts for
- * conflicts, and the 401 handler that returns to committee sign-in.
+ * conflicts, the 401 handler that returns to committee sign-in, and one live connection
+ * (/admin/stream) shared by every page, with polling while it is down.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       <SessionExpiryListener signInRoute={ROUTES.adminSignIn} />
-      <ShellBody>{children}</ShellBody>
+      <AdminStreamProvider>
+        <ShellBody>{children}</ShellBody>
+      </AdminStreamProvider>
     </ToastProvider>
   );
 }

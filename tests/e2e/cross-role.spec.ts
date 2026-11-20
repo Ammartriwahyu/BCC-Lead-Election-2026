@@ -68,7 +68,8 @@ test('open → close → reopen → close from the panel, followed by a booth an
   await page.getByRole('button', { name: 'Reopen voting' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Reopen voting' }).click();
   await expect(page.getByRole('button', { name: 'Close voting' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Results\s*, locked/ })).toBeVisible();
+  // Results stay open while voting is open: the committee follows the count live (DEVIATIONS #86).
+  await expect(page.getByRole('link', { name: 'Results', exact: true })).toBeVisible();
   await expect(booth).toHaveURL(/\/candidates$/, LIVE);
   await expect(screenOnPage(display)).toHaveAttribute('data-screen', 'VOTING_OPEN', LIVE);
 

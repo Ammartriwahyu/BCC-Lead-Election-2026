@@ -1,5 +1,5 @@
 import { adminCopy } from '@/content/adminCopy';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import type { ElectionState } from '@/lib/api/types';
 import { cx } from '@/lib/utils/cx';
 
@@ -45,7 +45,7 @@ export function VotingStatusCard({ state }: { state: ElectionState }) {
                       : 'text-body-1-medium text-text-primary'
                   }
                 >
-                  {content.election.badge[step]}
+                  {commonCopy.electionBadge[step]}
                 </span>
                 {current ? (
                   <span className="text-caption-semibold text-text-secondary">{copy.now}</span>

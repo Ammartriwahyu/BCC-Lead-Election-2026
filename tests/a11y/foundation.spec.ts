@@ -5,10 +5,13 @@
 import AxeBuilder from '@axe-core/playwright';
 
 import { expect, test, type Page } from '../fixtures';
+import { settleAnimations } from '../visual/checks';
 
 const WIDTHS = [360, 390, 768, 1024, 1280, 1512] as const;
 
 async function seriousViolations(page: Page) {
+  // Contrast is measured on the final frame, not halfway through an entrance animation.
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();

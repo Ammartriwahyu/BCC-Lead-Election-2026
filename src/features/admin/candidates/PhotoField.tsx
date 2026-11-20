@@ -7,7 +7,7 @@ import { CandidateImage } from '@/components/ui/CandidateImage';
 import { Field } from '@/components/ui/Field';
 import { CANDIDATE } from '@/config/constants';
 import { candidateFormCopy } from '@/content/candidateFormCopy';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { cx } from '@/lib/utils/cx';
 import { formatFileSize } from '@/lib/utils/format';
 
@@ -147,7 +147,7 @@ export function PhotoField({
             <span className="relative flex h-120 w-96 shrink-0 items-center justify-center overflow-hidden rounded-md bg-bg-subtle">
               <CandidateImage
                 src={value.url}
-                alt={content.candidates.photoAlt(candidateName || copy.previewName)}
+                alt={commonCopy.candidatePhotoAlt(candidateName || copy.previewName)}
                 sizes="96px"
               />
             </span>

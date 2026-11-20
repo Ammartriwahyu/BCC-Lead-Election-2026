@@ -13,7 +13,7 @@ import {
 
 import { CheckCircleIcon } from '@/components/icons/CheckCircleIcon';
 import { UI } from '@/config/constants';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { cx } from '@/lib/utils/cx';
 
 /**
@@ -80,7 +80,7 @@ function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: (id: numbe
       <li
         ref={ref}
         role="status"
-        className="flex animate-fade-in items-center gap-8 self-end rounded-full bg-bg-sidebar py-4 pr-16 pl-6 text-body-1-medium text-text-on-dark"
+        className="flex animate-toast-in items-center gap-8 self-end rounded-full bg-bg-sidebar py-4 pr-16 pl-6 text-body-1-medium text-text-on-dark"
       >
         <CheckCircleIcon size={24} className="shrink-0 text-green-500" />
         <span>{item.title}</span>
@@ -93,7 +93,7 @@ function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: (id: numbe
       ref={ref}
       role={item.tone === 'danger' ? 'alert' : 'status'}
       className={cx(
-        'flex animate-fade-in flex-col gap-4 rounded-lg border-l-4 bg-surface-card p-16 shadow-dropdown',
+        'flex animate-toast-in flex-col gap-4 rounded-lg border-l-4 bg-surface-card p-16 shadow-dropdown',
         item.tone === 'danger' ? 'border-text-danger' : 'border-action-primary',
       )}
     >
@@ -126,7 +126,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {/* The list is always in the DOM so screen readers already watch it when a toast arrives. */}
       <section
-        aria-label={content.toast.region}
+        aria-label={commonCopy.toast.region}
         className="pointer-events-none fixed right-16 bottom-16 z-[60] w-[min(400px,calc(100vw-32px))]"
       >
         <ol className="pointer-events-auto flex flex-col gap-12">

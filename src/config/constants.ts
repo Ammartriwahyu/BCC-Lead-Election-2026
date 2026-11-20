@@ -12,6 +12,8 @@ export const POLLING = {
   electionStateMs: 5 * SECOND,
   /** Admin overview live turnout. Spec target: <= 5 s delay. */
   adminOverviewMs: 4 * SECOND,
+  /** Admin Results page while voting is open: live totals per candidate (DEVIATIONS #86). */
+  adminLiveResultsMs: 3 * SECOND,
   /** Public display fallback when no stream is available. */
   displayMs: 3 * SECOND,
 } as const;
@@ -84,6 +86,14 @@ export const ADMIN = {
   candidateToastMs: 3 * SECOND,
 } as const;
 
+export const STREAM = {
+  /**
+   * After a stream that worked drops (/admin/stream, /election/stream): poll, and try the stream
+   * again after this.
+   */
+  retryMs: 60 * SECOND,
+} as const;
+
 /** Candidate rules (backend doc + spec 4.4). The stricter limit of the two wins. */
 export const CANDIDATE = {
   /** Ballot numbers the backend accepts. */
@@ -96,8 +106,11 @@ export const CANDIDATE = {
   visionMax: 280,
   missionsMin: 1,
   missionsMax: 5,
-  /** Spec 4.4: 160 (backend allows 200). */
-  missionMax: 160,
+  /**
+   * The backend limit (spec 4.4 said 160). The committee set no rule of its own (20 Nov 2026,
+   * DEVIATIONS #87), so the form allows what the backend accepts.
+   */
+  missionMax: 200,
   photoMaxBytes: 2 * 1024 * 1024,
   photoTypes: ['image/jpeg', 'image/png'],
   /** Portrait 4:5 (width / height). */

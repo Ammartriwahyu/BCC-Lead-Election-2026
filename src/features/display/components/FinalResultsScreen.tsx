@@ -47,7 +47,7 @@ function PodiumColumn({ tally, leading, tied, topShare }: ColumnProps) {
       <div
         data-testid="podium-bar"
         className={cx(
-          'flex w-full justify-center rounded-t-xl p-24',
+          'flex w-full animate-reveal-up justify-center rounded-t-xl p-24 motion-follow',
           leading ? 'bg-orange-300 text-primary-800' : 'bg-primary-600 text-text-on-dark',
         )}
         style={{ height: podiumBarHeight(tally.share, topShare) }}
@@ -79,7 +79,10 @@ function RankedRow({ tally, leading, tied, topShare }: ColumnProps) {
       </div>
       <div aria-hidden="true" className="h-56 flex-1 overflow-hidden rounded-r-xl bg-primary-700">
         <div
-          className={cx('h-full rounded-r-xl', leading ? 'bg-orange-300' : 'bg-primary-600')}
+          className={cx(
+            'h-full animate-reveal-right rounded-r-xl motion-follow',
+            leading ? 'bg-orange-300' : 'bg-primary-600',
+          )}
           style={{ width: `${rankedBarRatio(tally.share, topShare) * PERCENT}%` }}
         />
       </div>
@@ -121,7 +124,7 @@ export function FinalResultsScreen({ turnout, results }: FinalResultsScreenProps
         <Badge tone="neutral">{copy.badge}</Badge>
       </div>
       {layout === 'podium' ? (
-        <ol className="flex flex-1 items-end justify-center gap-40">
+        <ol className="flex flex-1 motion-stagger items-end justify-center gap-40">
           {(results.validVotes === 0 ? results.candidates : podiumOrder(results.candidates)).map(
             (tally) => (
               <PodiumColumn key={tally.candidateId} {...itemProps(tally)} />
@@ -129,7 +132,7 @@ export function FinalResultsScreen({ turnout, results }: FinalResultsScreenProps
           )}
         </ol>
       ) : (
-        <ol className="flex flex-1 flex-col justify-center gap-24 pr-260">
+        <ol className="flex flex-1 motion-stagger flex-col justify-center gap-24 pr-260">
           {results.candidates.map((tally) => (
             <RankedRow key={tally.candidateId} {...itemProps(tally)} />
           ))}

@@ -11,14 +11,17 @@ interface VoterNavbarProps {
 
 /**
  * Figma "Pilketum / Voter navbar" (36:2921, 1512×88) and "… mobile" (78:3221, 390×64).
- * Sticky so it stays visible on mobile while content scrolls.
+ * Sticky at every width so the brand and Sign out stay in reach while the page scrolls
+ * (desktop sticky is NEW, DEVIATIONS #85). `data-sticky-navbar` gives the page a matching
+ * scroll padding, so keyboard focus never lands under it.
  */
 export function VoterNavbar({ voterName, signOutSlot }: VoterNavbarProps) {
   const signedIn = Boolean(signOutSlot);
   return (
     <header
       data-surface="dark"
-      className="sticky top-0 z-40 flex h-64 items-center justify-between bg-bg-navy page-gutter py-8 md:relative md:h-88 md:py-20"
+      data-sticky-navbar=""
+      className="sticky top-0 z-40 flex h-64 items-center justify-between bg-bg-navy page-gutter py-8 md:h-88 md:py-20"
     >
       <div className="flex items-center gap-12 md:gap-16">
         <Logo size="mobile" className="md:hidden" />

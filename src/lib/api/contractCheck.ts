@@ -187,7 +187,10 @@ class Checker {
   }
 
   /** Reads an SSE stream until the first message of the registry's event, then closes it. */
-  async checkStream(name: 'streamDisplay' | 'streamAdmin', token?: string): Promise<void> {
+  async checkStream(
+    name: 'streamDisplay' | 'streamElection' | 'streamAdmin',
+    token?: string,
+  ): Promise<void> {
     const spec = ENDPOINTS[name];
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -282,6 +285,7 @@ async function checkVoter(checker: Checker, voter: Credentials): Promise<void> {
   checker.record('voterSignIn token', 'pass', 'token returned');
 
   await checker.expectOk('getMe', { token });
+  await checker.checkStream('streamElection', token);
   await checker.expectOk('getCandidates', { token });
   await checker.expectError('getAdminOverview', 'FORBIDDEN', { token }, 'voter token on /admin');
   await checker.expectOk('voterSignOut', { token });
@@ -321,6 +325,10 @@ async function checkAdmin(checker: Checker, admin: Credentials): Promise<void> {
   } else if (state.data.status === 'closed') {
     await checker.expectOk('getAdminResults', { token });
     await checker.expectOk('exportResults', { token });
+  } else if (state.data.status === 'open') {
+    // Live totals for the committee while open; the export still waits for closing.
+    await checker.expectOk('getAdminResults', { token });
+    await checker.expectError('exportResults', 'RESULTS_LOCKED', { token });
   } else {
     await checker.expectError('getAdminResults', 'RESULTS_LOCKED', { token });
     await checker.expectError('exportResults', 'RESULTS_LOCKED', { token });
@@ -344,6 +352,7 @@ export async function checkContract(options: CheckOptions): Promise<CheckResult[
     {},
     'getAdminOverview without a token',
   );
+  await checker.expectError('streamElection', 'UNAUTHORIZED', {}, 'streamElection without a token');
 
   if (options.voter) await checkVoter(checker, options.voter);
   else checker.record('voter endpoints', 'skip', 'no voter test account given');

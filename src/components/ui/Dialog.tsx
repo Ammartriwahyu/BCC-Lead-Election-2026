@@ -51,7 +51,7 @@ export function Dialog({
       }}
     >
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className="fixed inset-0 z-50 animate-fade-in bg-primary-900/60" />
+        <RadixDialog.Overlay className="fixed inset-0 z-50 animate-fade-in bg-primary-900/60 data-[state=closed]:animate-fade-out-fast" />
         <RadixDialog.Content
           {...(description ? {} : { 'aria-describedby': undefined })}
           onCloseAutoFocus={returnFocus}
@@ -59,7 +59,7 @@ export function Dialog({
           onPointerDownOutside={dismissible ? undefined : block}
           onInteractOutside={dismissible ? undefined : block}
           className={cx(
-            'fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 animate-fade-in overflow-y-auto rounded-xl bg-surface-card shadow-modal outline-none',
+            'fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 animate-dialog-in overflow-y-auto rounded-xl bg-surface-card shadow-modal outline-none data-[state=closed]:animate-dialog-out',
             bare ? 'max-w-max' : 'flex max-w-520 flex-col gap-20 p-32',
             className,
           )}

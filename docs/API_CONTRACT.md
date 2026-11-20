@@ -42,46 +42,48 @@ Voters can sign in in every status (`not_started`, `open`, `closed`). `OTP_INVAL
 
 `{ "error": { "code", "message", "fields"? } }` (OTP_INVALID adds `flow` and `devices`). The UI acts on `code` only; `errorResponse.ts` maps backend codes to the app's codes:
 
-| Backend code                                                                 | HTTP          | App code                          | UI                                                               |
-| ---------------------------------------------------------------------------- | ------------- | --------------------------------- | ---------------------------------------------------------------- |
-| `INVALID_CREDENTIALS`                                                        | 401           | same                              | Banner, password cleared                                         |
-| `NOT_REGISTERED`                                                             | 403           | `NOT_A_VOTER`                     | Error under "NIM or UB email"                                    |
-| `OTP_INVALID` / `OTP_EXPIRED`                                                | 401           | same                              | Field error with the new flow / back to the sign-in form         |
-| `RATE_LIMITED` (+ `Retry-After`, always sent, seconds, ≥ 1)                  | 429           | same (`retryAfterSeconds`)        | "Too many attempts. Try again in N seconds."                     |
-| `SSO_UNAVAILABLE` / `SSO_BUSY`                                               | 502–504 / 503 | same                              | Banners                                                          |
-| `UNAUTHORIZED`                                                               | 401           | same                              | Clear cache, back to sign-in "session ended"                     |
-| `FORBIDDEN`                                                                  | 403           | same                              | Generic error                                                    |
-| `VOTING_NOT_OPEN`                                                            | 409           | same                              | Refetch status: `closed` → `/closed`, otherwise stay (read-only) |
-| `ALREADY_VOTED`                                                              | 409           | same                              | `/already-voted`                                                 |
-| `NOT_FOUND`                                                                  | 404           | same                              | Candidate gone: reload the list / 404 page                       |
-| `INVALID_STATE`                                                              | 409           | `STATE_CONFLICT`                  | Toast "Someone else changed the voting state" + refetch          |
-| `DISPLAY_CHANGED` (+ `display_screen` on air)                                | 409           | `STATE_CONFLICT`                  | Toast "The display changed in the meantime" + refetch            |
-| `RESULTS_LOCKED`                                                             | 409           | same                              | "Results are locked"; display change rolled back                 |
-| `CANDIDATES_INCOMPLETE`                                                      | 409           | same                              | Open voting dialog shows the reason                              |
-| `CANDIDATES_LOCKED` / `MEMBERS_LOCKED`                                       | 409           | `CANDIDATES_LOCKED`               | Toast, back to the read-only list                                |
-| `BALLOT_NUMBER_TAKEN`                                                        | 409           | same                              | Error under "Ballot number"                                      |
-| `PHOTO_TOO_LARGE` / `PHOTO_INVALID`                                          | 413 / 422     | same                              | Error under "Photo"                                              |
-| `VALIDATION_FAILED` (+ `fields`), `BAD_REQUEST`, `INVALID_SCREEN`            | 422 / 400     | `VALIDATION`                      | Field errors (form) or generic error                             |
-| `INTERNAL_ERROR`, `TOO_MANY_STREAMS`, `STREAM_UNAVAILABLE`, network, timeout | 5xx / 429     | `UNKNOWN` / `NETWORK` / `TIMEOUT` | Retry; vote → V4 with a `has_voted` check before resending       |
+| Backend code                                                                 | HTTP          | App code                          | UI                                                                                 |
+| ---------------------------------------------------------------------------- | ------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
+| `INVALID_CREDENTIALS`                                                        | 401           | same                              | Banner, password cleared                                                           |
+| `NOT_REGISTERED`                                                             | 403           | `NOT_A_VOTER`                     | Error under "NIM or UB email"                                                      |
+| `OTP_INVALID` / `OTP_EXPIRED`                                                | 401           | same                              | Field error with the new flow / back to the sign-in form                           |
+| `RATE_LIMITED` (+ `Retry-After`, always sent, seconds, ≥ 1)                  | 429           | same (`retryAfterSeconds`)        | "Too many attempts. Try again in N seconds."                                       |
+| `SSO_UNAVAILABLE` / `SSO_BUSY`                                               | 502–504 / 503 | same                              | Banners                                                                            |
+| `UNAUTHORIZED`                                                               | 401           | same                              | Clear cache, back to sign-in "session ended"                                       |
+| `FORBIDDEN`                                                                  | 403           | same                              | Generic error                                                                      |
+| `VOTING_NOT_OPEN`                                                            | 409           | same                              | Refetch status: `closed` → `/closed`, otherwise stay (read-only)                   |
+| `ALREADY_VOTED`                                                              | 409           | same                              | `/already-voted`                                                                   |
+| `NOT_FOUND`                                                                  | 404           | same                              | Candidate gone: reload the list / 404 page                                         |
+| `INVALID_STATE`                                                              | 409           | `STATE_CONFLICT`                  | Toast "Someone else changed the voting state" + refetch                            |
+| `DISPLAY_CHANGED` (+ `display_screen` on air)                                | 409           | `STATE_CONFLICT`                  | Toast "The display changed in the meantime" + refetch                              |
+| `RESULTS_LOCKED`                                                             | 409           | same                              | "Results are locked" (or "live results not available"); display change rolled back |
+| `CANDIDATES_INCOMPLETE`                                                      | 409           | same                              | Open voting dialog shows the reason                                                |
+| `CANDIDATES_LOCKED` / `MEMBERS_LOCKED`                                       | 409           | `CANDIDATES_LOCKED`               | Toast, back to the read-only list                                                  |
+| `BALLOT_NUMBER_TAKEN`                                                        | 409           | same                              | Error under "Ballot number"                                                        |
+| `PHOTO_TOO_LARGE` / `PHOTO_INVALID`                                          | 413 / 422     | same                              | Error under "Photo"                                                                |
+| `VALIDATION_FAILED` (+ `fields`), `BAD_REQUEST`, `INVALID_SCREEN`            | 422 / 400     | `VALIDATION`                      | Field errors (form) or generic error                                               |
+| `INTERNAL_ERROR`, `TOO_MANY_STREAMS`, `STREAM_UNAVAILABLE`, network, timeout | 5xx / 429     | `UNKNOWN` / `NETWORK` / `TIMEOUT` | Retry; vote → V4 with a `has_voted` check before resending                         |
 
 ## Endpoints used
 
 Full shapes: `docs/openapi.json`. Mapping notes:
 
-| Endpoint                                           | Frontend use                                                                                                                                                                |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /election`                                    | Sign-in status strip, voter state polling (every 5 s). `server_time` unused                                                                                                 |
-| `GET /display`, `GET /display/stream`              | `/display` (SSE first, polling every 3 s as fallback). No `version`: a poll answer that started before the latest stream event is dropped                                   |
-| `POST /auth/login`, `/auth/otp`, `/auth/logout`    | Sign-in (V0), OTP step (NEW, no Figma frame), sign-out / booth auto sign-out                                                                                                |
-| `GET /me`                                          | `has_voted` → V5b with `voted_at` ("Submitted … WIB"); also checked before a vote retry. `study_program` / `department` may be `""`                                         |
-| `GET /candidates`                                  | Ballot and the vision & mission page (one candidate is taken from the list; there is no voter `GET /candidates/{id}`)                                                       |
-| `POST /votes { candidate_id }`                     | Final; `201 { voted: true }`. No `Idempotency-Key`: V4 "Try again" checks `has_voted` first. The answer has no time: V5 shows this device's time                            |
-| `GET /admin/me`, `GET /admin/overview`             | Topbar (`display_name`, else the username), overview polled every 4 s. `candidates_locked` locks A6–A8 (older answers: `opened_at` set)                                     |
-| `POST /admin/election/{open,close,reopen}`         | Confirm dialogs. Body `{ expected_status }` (the status the action starts from): a stale action fails with `INVALID_STATE`                                                  |
-| `PUT /admin/display { screen, expected_screen }`   | Result screens only, only while `closed`. `expected_screen` = the screen the member saw: `409 DISPLAY_CHANGED` instead of overwriting. Answers `{ status, display_screen }` |
-| `GET /admin/voters?page&per_page&search`           | Voter list (6 per page, search on name, email or NIM). `email` may be `null`                                                                                                |
-| `GET /admin/results`, `/admin/results/export`      | Results (shares recomputed from `votes` / `total_votes`), `integrity_ok = false` warning, Excel download (NEW button)                                                       |
-| `/admin/candidates…` (CRUD + `PUT/DELETE …/photo`) | A6–A8. Photo upload is multipart `photo`, sent after the candidate is saved                                                                                                 |
+| Endpoint                                           | Frontend use                                                                                                                                                                                                                                          |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /election`                                    | Sign-in status strip (read once, no polling), voter state polling (every 5 s) while `/election/stream` is down. `server_time` unused                                                                                                                  |
+| `GET /election/stream` (`event: election`)         | Voter pages (session gate): each event replaces the state; no polling while it is open, polling every 5 s while it is down, retried after 60 s. Neither once the voter has voted. The stream code loads after the page (`import()`, JS budget)        |
+| `GET /display`, `GET /display/stream`              | `/display` (SSE first, polling every 3 s as fallback). No `version`: a poll answer that started before the latest stream event is dropped                                                                                                             |
+| `POST /auth/login`, `/auth/otp`, `/auth/logout`    | Sign-in (V0), OTP step (NEW, no Figma frame), sign-out / booth auto sign-out                                                                                                                                                                          |
+| `GET /me`                                          | `has_voted` → V5b with `voted_at` ("Submitted … WIB"); also checked before a vote retry. `study_program` / `department` may be `""`                                                                                                                   |
+| `GET /candidates`                                  | Ballot and the vision & mission page (one candidate is taken from the list; there is no voter `GET /candidates/{id}`)                                                                                                                                 |
+| `POST /votes { candidate_id }`                     | Final; `201 { voted: true }`. No `Idempotency-Key`: V4 "Try again" checks `has_voted` first. The answer has no time: V5 shows this device's time                                                                                                      |
+| `GET /admin/me`, `GET /admin/overview`             | Topbar (`display_name`, else the username). `candidates_locked` locks A6–A8 (older answers: `opened_at` set)                                                                                                                                          |
+| `GET /admin/stream` (`event: overview`)            | One connection for the whole panel: each event replaces the overview; a new vote refreshes the voter list and live results once. While it is down: overview / voters polled every 4 s, live results every 3 s; a dropped stream is retried after 60 s |
+| `POST /admin/election/{open,close,reopen}`         | Confirm dialogs. Body `{ expected_status }` (the status the action starts from): a stale action fails with `INVALID_STATE`                                                                                                                            |
+| `PUT /admin/display { screen, expected_screen }`   | Result screens only, only while `closed`. `expected_screen` = the screen the member saw: `409 DISPLAY_CHANGED` instead of overwriting. Answers `{ status, display_screen }`                                                                           |
+| `GET /admin/voters?page&per_page&search`           | Voter list (6 per page, search on name, email or NIM). `email` may be `null`                                                                                                                                                                          |
+| `GET /admin/results`, `/admin/results/export`      | Results (shares recomputed from `votes` / `total_votes`), `integrity_ok = false` warning, Excel download (NEW button). Results also while `open`, polled every 3 s (live count, requested: BACKEND_QUESTIONS #14); export only while `closed`         |
+| `/admin/candidates…` (CRUD + `PUT/DELETE …/photo`) | A6–A8. Photo upload is multipart `photo`, sent after the candidate is saved                                                                                                                                                                           |
 
 Lists: a response list the backend leaves out or sends as `null` is read as `[]` (seen on staging: `voting_opens_soon` without `candidates` while there are none).
 
@@ -91,7 +93,7 @@ Results rows (`results[]`, `winners[]`, `results.candidates[]`) always have `id,
 
 Screens: `voting_opens_soon` → OPENS_SOON, `voting_open` → VOTING_OPEN, `voting_closed` → VOTING_CLOSED, `winner_suspense` → WINNER_REVEAL, `final_results` → FINAL_RESULTS, `most_votes` → MOST_VOTES (only `winners`; shares use `total_votes`).
 
-Privacy rules kept: candidate totals only on `final_results` / `most_votes` and `GET /admin/results` while `closed`; the frontend never requests results unless the state is `closed`.
+Privacy rules kept: no response links a voter to a candidate. Public candidate totals only on `final_results` / `most_votes` once `closed`. The committee's `GET /admin/results` is requested while `open` (live, Results page only) or `closed`, never before voting opens; a `409 RESULTS_LOCKED` while `open` shows "Live results are not available yet" and stops polling.
 
 ## Demo accounts (mock backend only)
 
