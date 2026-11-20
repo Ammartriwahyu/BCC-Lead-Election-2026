@@ -9,7 +9,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { ToastProvider } from '@/components/ui/Toaster';
 import { ROUTES } from '@/config/constants';
 import { adminNavCopy } from '@/content/adminCopy';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { SessionExpiryListener } from '@/features/auth/components/SessionExpiryListener';
 import { hasErrorCode } from '@/lib/api/errors';
 
@@ -47,7 +47,7 @@ function ShellBody({ children }: { children: ReactNode }) {
     return (
       <div role="status" className="flex min-h-dvh items-center justify-center">
         <Spinner size={48} />
-        <span className="sr-only">{content.loading}</span>
+        <span className="sr-only">{commonCopy.loading}</span>
       </div>
     );
   }

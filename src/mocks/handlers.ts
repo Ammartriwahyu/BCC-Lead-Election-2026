@@ -249,8 +249,16 @@ const electionStateDto = (db: MockDb) => ({
   closed_at: db.closedAt,
 });
 
-/** SSE response that sends `event` with `payload()` on connect and whenever it changes. */
-function eventStream(event: string, payload: () => unknown): HttpResponse<ReadableStream> {
+/**
+ * SSE response that sends `event` with `payload()` on connect and whenever it changes. With
+ * `authorized`, the stream ends as soon as it returns false (the session expired or was dropped),
+ * like the backend does when a token expires.
+ */
+function eventStream(
+  event: string,
+  payload: () => unknown,
+  authorized?: () => boolean,
+): HttpResponse<ReadableStream> {
   const encoder = new TextEncoder();
   let tick: ReturnType<typeof setInterval> | undefined;
   let keepAlive: ReturnType<typeof setInterval> | undefined;
@@ -269,6 +277,15 @@ function eventStream(event: string, payload: () => unknown): HttpResponse<Readab
         }
       };
       const push = () => {
+        if (authorized && !authorized()) {
+          stop();
+          try {
+            controller.close();
+          } catch {
+            // already closed by the client
+          }
+          return;
+        }
         const data = JSON.stringify(payload());
         if (data === last) return;
         last = data;
@@ -475,7 +492,11 @@ export const handlers = [
       const auth = authorize(getDb(), request, ['voter']);
       if (isResponse(auth)) return auth;
       // Status only (server_time is optional): an event goes out only when the state changes.
-      return eventStream(ENDPOINTS.streamElection.stream.event, () => ({ status: getDb().status }));
+      return eventStream(
+        ENDPOINTS.streamElection.stream.event,
+        () => ({ status: getDb().status }),
+        () => !isResponse(authorize(getDb(), request, ['voter'])),
+      );
     },
   ),
 
@@ -563,7 +584,11 @@ export const handlers = [
     ({ request }) => {
       const auth = authorize(getDb(), request, ['admin']);
       if (isResponse(auth)) return auth;
-      return eventStream(ENDPOINTS.streamAdmin.stream.event, () => overviewDto(getDb()));
+      return eventStream(
+        ENDPOINTS.streamAdmin.stream.event,
+        () => overviewDto(getDb()),
+        () => !isResponse(authorize(getDb(), request, ['admin'])),
+      );
     },
   ),
 

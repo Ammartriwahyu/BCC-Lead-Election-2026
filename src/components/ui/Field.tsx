@@ -1,6 +1,6 @@
 import { useId, type ReactNode } from 'react';
 
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { cx } from '@/lib/utils/cx';
 
 export interface FieldControlProps {
@@ -38,7 +38,7 @@ export function Field({ label, required, error, hint, className, children }: Fie
         className={cx('text-body-1-semibold', error ? 'text-text-danger' : 'text-text-primary')}
       >
         {label}
-        {required ? <span aria-hidden="true">{` ${content.field.requiredMark}`}</span> : null}
+        {required ? <span aria-hidden="true">{` ${commonCopy.field.requiredMark}`}</span> : null}
       </label>
       {children({
         id,

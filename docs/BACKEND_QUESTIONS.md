@@ -4,7 +4,11 @@ Status after the backend doc "API Pilketum BCC" (17 Nov 2026) and the backend te
 
 ## Open
 
-None. Requests #14 and #15 (sent 18 Nov 2026) were confirmed by the backend team the same day ("Sudah, bisa di cek"). The optional `results` event on `/admin/stream` (part of #14) was not confirmed and is not needed: the Results page already refetches the totals once per `overview` event that reports a new vote.
+| #   | Request                                                                                                                                                               | Frontend now                                                                                                                        | If not                                                                                                     | Priority |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------- |
+| 16  | End `/api/admin/stream` and `/api/election/stream` as soon as the token stops being valid: expired, signed out elsewhere, or revoked (not only at the next reconnect) | While a stream is open the pages do not poll; when the stream ends they poll, get `401` and go to sign-in with "Your session ended" | A committee member (or voter) whose session ended keeps seeing live data until their next action or reload | Medium   |
+
+Requests #14 and #15 (sent 18 Nov 2026) were confirmed by the backend team the same day ("Sudah, bisa di cek"). The optional `results` event on `/admin/stream` (part of #14) was not confirmed and is not needed: the Results page already refetches the totals once per `overview` event that reports a new vote.
 
 Questions #1–13 were answered by the backend team on 18 Nov 2026 ("Jawaban Tim Backend"; their doc `docs/ini doks.md` in `bccfilkom/pilketum` was updated to match).
 

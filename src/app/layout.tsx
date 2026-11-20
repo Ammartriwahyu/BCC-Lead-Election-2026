@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google';
 import { connection } from 'next/server';
 import type { ReactNode } from 'react';
 
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 
 import { Providers } from './providers';
 import '@/styles/globals.css';
@@ -18,8 +18,8 @@ const ScenarioSwitcher =
     : null;
 
 export const metadata: Metadata = {
-  title: { default: content.meta.title, template: `%s · ${content.meta.title}` },
-  description: content.meta.description,
+  title: { default: commonCopy.meta.title, template: `%s · ${commonCopy.meta.title}` },
+  description: commonCopy.meta.description,
   robots: { index: false, follow: false },
 };
 

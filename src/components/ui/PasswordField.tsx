@@ -4,7 +4,7 @@ import { forwardRef, useState } from 'react';
 
 import { EyeIcon } from '@/components/icons/EyeIcon';
 import { EyeOffIcon } from '@/components/icons/EyeOffIcon';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 
 import { Field, inputBoxClassName } from './Field';
 import type { TextFieldProps } from './TextField';
@@ -36,7 +36,7 @@ export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, '
             <button
               type="button"
               aria-pressed={visible}
-              aria-label={visible ? content.field.hidePassword : content.field.showPassword}
+              aria-label={visible ? commonCopy.field.hidePassword : commonCopy.field.showPassword}
               onClick={() => {
                 setVisible((v) => !v);
               }}

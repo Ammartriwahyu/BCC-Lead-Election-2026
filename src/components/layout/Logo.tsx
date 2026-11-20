@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
 import logo from '@/assets/brand/logo-bcc-white.png';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { cx } from '@/lib/utils/cx';
 
 /** Figma "BCC Logo - White" sizes: voter navbar 101, mobile navbar 80, admin sidebar / A0 122, display 146 (px wide). */
@@ -19,7 +19,7 @@ export function Logo({ size, className, decorative = false }: LogoProps) {
   return (
     <Image
       src={logo}
-      alt={decorative ? '' : content.brand.logoAlt}
+      alt={decorative ? '' : commonCopy.brand.logoAlt}
       width={width}
       height={Math.round((width * logo.height) / logo.width)}
       // Eager, not `priority`: navbars render a mobile and a desktop logo and hide one with CSS.

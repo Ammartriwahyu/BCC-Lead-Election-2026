@@ -5,9 +5,9 @@ import { VoterNavbar } from '@/components/layout/VoterNavbar';
 import { VoterPageShell } from '@/components/layout/VoterPageShell';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ROUTES } from '@/config/constants';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 
-export const metadata: Metadata = { title: content.notFound.title };
+export const metadata: Metadata = { title: commonCopy.notFound.title };
 
 /** NEW (not in Figma): 404 in the V6 status style with Brace "Woah". See DEVIATIONS. */
 export default function NotFound() {
@@ -15,9 +15,9 @@ export default function NotFound() {
     <VoterPageShell navbar={<VoterNavbar />} decorations="both">
       <StatusScreen
         pose="woah"
-        title={content.notFound.title}
-        body={<p>{content.notFound.body}</p>}
-        actions={<ButtonLink href={ROUTES.signIn}>{content.notFound.action}</ButtonLink>}
+        title={commonCopy.notFound.title}
+        body={<p>{commonCopy.notFound.body}</p>}
+        actions={<ButtonLink href={ROUTES.signIn}>{commonCopy.notFound.action}</ButtonLink>}
       />
     </VoterPageShell>
   );

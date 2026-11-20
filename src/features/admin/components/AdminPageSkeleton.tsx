@@ -1,11 +1,11 @@
 import { Skeleton } from '@/components/ui/Skeleton';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 
 /** NEW (not in Figma): placeholder while a committee page loads its first data. */
 export function AdminPageSkeleton() {
   return (
     <div role="status" className="flex flex-col gap-32">
-      <span className="sr-only">{content.loading}</span>
+      <span className="sr-only">{commonCopy.loading}</span>
       <div className="flex flex-col gap-8">
         <Skeleton className="h-48 w-255" />
         <Skeleton className="h-24 w-full max-w-520" />

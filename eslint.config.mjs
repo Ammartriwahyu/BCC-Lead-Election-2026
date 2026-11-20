@@ -107,6 +107,45 @@ export default defineConfig([
     },
   },
   {
+    // JS budget: the committee panel, shared components and root pages take shared strings from
+    // content/commonCopy.ts, never the voter strings in content/copy.ts. Repeats the lib/api
+    // boundary above because a later block replaces the rule instead of merging it.
+    files: [
+      'src/features/admin/**/*.{ts,tsx}',
+      'src/app/admin/**/*.{ts,tsx}',
+      'src/components/**/*.{ts,tsx}',
+      'src/features/candidates/candidateLabels.ts',
+      'src/features/election/components/ElectionBadge.tsx',
+      'src/app/{layout,error,global-error,not-found}.tsx',
+    ],
+    ignores: [
+      'src/components/layout/VoterNavbar.tsx',
+      'src/components/layout/VoterFooter.tsx',
+      'src/**/*.test.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@/content/copy',
+              message:
+                'Voter strings: use @/content/commonCopy (or the area copy file) here, so the committee panel does not load them.',
+            },
+          ],
+          patterns: [
+            {
+              regex: '^@/lib/api/(?!(endpoints|types|errors|zodConfig)$)',
+              message:
+                'Import from @/lib/api/endpoints, types or errors. Wire format and HTTP stay inside lib/api.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.{mjs,js}', 'scripts/**', '*.config.ts'],
     extends: [tseslint.configs.disableTypeChecked],
     rules: { 'no-console': 'off' },

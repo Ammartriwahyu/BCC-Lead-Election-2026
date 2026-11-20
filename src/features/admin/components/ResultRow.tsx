@@ -1,6 +1,6 @@
 import { MeterBar } from '@/components/ui/MeterBar';
 import { adminCopy } from '@/content/adminCopy';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import type { CandidateTally } from '@/lib/api/types';
 import { cx } from '@/lib/utils/cx';
 import { formatCandidateNumber, formatNumber, formatPercent } from '@/lib/utils/format';
@@ -30,7 +30,7 @@ export function ResultRow({ tally, leading, tied }: ResultRowProps) {
     >
       <div className="flex w-full min-w-0 flex-col gap-4 md:w-300">
         <p className="text-body-2-semibold text-text-brand">
-          {content.candidates.numberLabel(formatCandidateNumber(tally.number))}
+          {commonCopy.candidateNumber(formatCandidateNumber(tally.number))}
           {leading ? (
             <span className="sr-only">{`, ${tied ? copy.tied : copy.leading}`}</span>
           ) : null}

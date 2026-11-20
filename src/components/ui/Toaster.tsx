@@ -13,7 +13,7 @@ import {
 
 import { CheckCircleIcon } from '@/components/icons/CheckCircleIcon';
 import { UI } from '@/config/constants';
-import { content } from '@/content/copy';
+import { commonCopy } from '@/content/commonCopy';
 import { cx } from '@/lib/utils/cx';
 
 /**
@@ -126,7 +126,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {/* The list is always in the DOM so screen readers already watch it when a toast arrives. */}
       <section
-        aria-label={content.toast.region}
+        aria-label={commonCopy.toast.region}
         className="pointer-events-none fixed right-16 bottom-16 z-[60] w-[min(400px,calc(100vw-32px))]"
       >
         <ol className="pointer-events-auto flex flex-col gap-12">
