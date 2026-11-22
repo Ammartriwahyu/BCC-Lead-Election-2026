@@ -1,6 +1,5 @@
-import Image from 'next/image';
-
 import logo from '@/assets/brand/logo-bcc-white.png';
+import { PlainImage } from '@/components/ui/PlainImage';
 import { commonCopy } from '@/content/commonCopy';
 import { cx } from '@/lib/utils/cx';
 
@@ -17,7 +16,7 @@ interface LogoProps {
 export function Logo({ size, className, decorative = false }: LogoProps) {
   const width = WIDTHS[size];
   return (
-    <Image
+    <PlainImage
       src={logo}
       alt={decorative ? '' : commonCopy.brand.logoAlt}
       width={width}

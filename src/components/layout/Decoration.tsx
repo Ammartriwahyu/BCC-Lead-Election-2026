@@ -1,5 +1,4 @@
-import Image from 'next/image';
-
+import { PlainImage } from '@/components/ui/PlainImage';
 import { cx } from '@/lib/utils/cx';
 
 /**
@@ -39,7 +38,7 @@ export function Decoration({ corner, className, scale = 1 }: DecorationProps) {
         tile === 0 ? (
           <span key={index} />
         ) : (
-          <Image
+          <PlainImage
             key={index}
             src={`/decoration/tile-${tile}.svg`}
             alt=""

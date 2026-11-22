@@ -1,8 +1,7 @@
-import Image from 'next/image';
-
 import glory from '@/assets/brace/glory.png';
 import hello from '@/assets/brace/hello.png';
 import woah from '@/assets/brace/woah.png';
+import { PlainImage } from '@/components/ui/PlainImage';
 import { cx } from '@/lib/utils/cx';
 
 /**
@@ -29,7 +28,7 @@ interface BraceProps {
 export function Brace({ pose, width, className, eager = false }: BraceProps) {
   const image = POSES[pose];
   return (
-    <Image
+    <PlainImage
       src={image}
       alt=""
       aria-hidden="true"
