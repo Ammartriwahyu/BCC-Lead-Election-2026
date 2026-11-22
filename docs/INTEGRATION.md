@@ -67,7 +67,7 @@ Writes (vote, open / close / reopen, display, candidate changes, photo upload) a
 
 - **Client IP** (agreed with the backend team): every request reaches the backend from the Next server, so the BFF adds `X-BFF-Secret` and `X-Client-IP`. The backend trusts `X-Client-IP` only with the right secret. The frontend's own proxy must append the real address to `X-Forwarded-For` (nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`); the BFF takes the entry `TRUSTED_PROXY_HOPS` from the right, so a header the browser made up is ignored. Login limits are per IP and per IP + username, so one booth room does not lock everyone out.
 - **CORS** is not needed: the browser only talks to its own origin, and the backend accepts requests without `Origin`.
-- **Streams** (`/api/display/stream`, `/api/election/stream`, `/api/admin/stream`) are not buffered on the backend side (nginx and the BCC proxy, `: ping` every 20 s, read timeout 1 h). The BFF passes the stream through and adds `X-Accel-Buffering: no`; the frontend's own nginx must not buffer `/api/display/stream`, `/api/election/stream` or `/api/admin/stream` either (`proxy_buffering off;`, `proxy_read_timeout 1h;`).
+- **Streams** (`/api/display/stream`, `/api/election/stream`, `/api/admin/stream`) are not buffered on the backend side (nginx and the BCC proxy, `: ping` every 20 s, read timeout 1 h). The BFF passes the stream through and adds `X-Accel-Buffering: no`; the frontend's own nginx must not buffer (config in `docs/DEPLOY.md`) `/api/display/stream`, `/api/election/stream` or `/api/admin/stream` either (`proxy_buffering off;`, `proxy_read_timeout 1h;`).
 
 ### 4. Cookies and sessions (frontend side)
 
