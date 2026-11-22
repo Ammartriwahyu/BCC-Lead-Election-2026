@@ -82,6 +82,7 @@
 | 2026-11-20 | 8 | Mission points up to 200 characters (backend limit) instead of 160 (spec 4.4) | The committee set no limit for vision and mission; more than 5 points or a longer vision would need the backend first |
 | 2026-11-20 | 8 | Strings shared by voter pages, committee panel and root pages moved to `content/commonCopy.ts` (`copy.ts` re-exposes them) | The panel loaded every voter string through shared components; `/admin/candidates` and `/admin/voters` were at 200.0–200.1 KB in CI, now 199.3 / 199.2 |
 | 2026-11-20 | 8 | Mock streams end when the session is gone (expired or dropped) | While a stream is open the panel does not poll, so a dropped session only shows once the stream ends: then it polls, gets 401 and signs out (asked the backend to do the same, BACKEND_QUESTIONS #16) |
+| 2026-11-22 | 8 | Photo adjust in the candidate form with canvas, no crop library (`photoCrop.ts` maths, `photoExport.ts`, `PhotoAdjustDialog` loaded with `next/dynamic`) | No new dependency; the form pages keep their JS budget; the backend receives an ordinary JPEG |
 | 2026-11-17 | 8 | Open voting needs exactly 3 complete candidates (backend), not "at least 2" (spec 4.4); form limits use the stricter spec values (name 80, mission 160) | Backend is authoritative for opening; asked in BACKEND_QUESTIONS #5–6 |
 | 2026-11-17 | 6 | Load and endurance specs in `tests/load` (3 booths × 139 voters; one booth × 20 voters memory; display 4 h on a fake clock) | Spec §10 "Beban & ketahanan"; Chromium DevTools metrics |
 

@@ -115,6 +115,16 @@ export const CANDIDATE = {
   photoTypes: ['image/jpeg', 'image/png'],
   /** Portrait 4:5 (width / height). */
   photoAspect: 4 / 5,
+  /** Adjust photo dialog (NEW, DEVIATIONS #88): frame width on screen, zoom range and steps. */
+  photoFrameWidth: 240,
+  photoMaxZoom: 3,
+  photoZoomStep: 0.05,
+  /** Arrow keys move the photo this far (Shift: the larger step), in frame pixels. */
+  photoNudgePx: 8,
+  photoNudgeLargePx: 40,
+  /** An adjusted photo is saved as a JPEG this wide at most (never upscaled), 4:5. */
+  photoOutputWidth: 800,
+  photoJpegQuality: 0.9,
   /** Class years offered in the form: the election year and the six before it. */
   classYearLatest: 2026,
   classYearCount: 7,

@@ -12,6 +12,8 @@ import { cx } from '@/lib/utils/cx';
 import { formatFileSize } from '@/lib/utils/format';
 
 import { photoProblem, type PhotoValue } from './candidateRules';
+import { LazyPhotoAdjustDialog } from './LazyPhotoAdjustDialog';
+import { INITIAL_CROP } from './photoCrop';
 
 const copy = candidateFormCopy.form;
 
@@ -42,7 +44,9 @@ function readDimensions(url: string): Promise<{ width: number; height: number }>
 /**
  * Figma "Pilketum / Photo upload" (149:3851): dashed drop zone with upload icon; once a photo is
  * chosen, a 4:5 thumbnail (cropped to the centre), file name, size and dimensions, Replace / Remove.
- * The file is uploaded on Save (its own endpoint), so nothing leaves the browser before that.
+ * NEW (DEVIATIONS #88): Adjust frames a newly picked photo (PhotoAdjustDialog) and swaps in the
+ * cropped JPEG. The file is uploaded on Save (its own endpoint), so nothing leaves the browser
+ * before that.
  */
 export function PhotoField({
   value,
@@ -54,6 +58,7 @@ export function PhotoField({
 }: PhotoFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
 
   // Object URLs of picked files are freed when the photo changes or the form closes.
   const fileUrl = value.kind === 'file' ? value.url : null;
@@ -163,13 +168,27 @@ export function PhotoField({
                 </p>
               ) : null}
               <div className="flex gap-8 pt-4">
+                {value.kind === 'file' ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdjusting(true);
+                    }}
+                    className="min-h-44 pr-8 text-body-2-semibold text-text-brand"
+                  >
+                    {copy.adjust}
+                  </button>
+                ) : null}
                 <button
                   ref={zoneRef}
                   type="button"
                   id={control.id}
                   aria-describedby={control['aria-describedby']}
                   onClick={pick}
-                  className="min-h-44 pr-8 text-body-2-semibold text-text-brand"
+                  className={cx(
+                    'min-h-44 text-body-2-semibold text-text-brand',
+                    value.kind === 'file' ? 'px-8' : 'pr-8',
+                  )}
                 >
                   {copy.replace}
                 </button>
@@ -185,6 +204,26 @@ export function PhotoField({
               </div>
             </div>
             {hidden}
+            {adjusting && value.kind === 'file' ? (
+              <LazyPhotoAdjustDialog
+                source={value.source?.file ?? value.file}
+                initialCrop={value.source?.crop ?? INITIAL_CROP}
+                onApply={({ file, crop, size }) => {
+                  setAdjusting(false);
+                  onChange({
+                    kind: 'file',
+                    file,
+                    url: URL.createObjectURL(file),
+                    width: size.width,
+                    height: size.height,
+                    source: { file: value.source?.file ?? value.file, crop },
+                  });
+                }}
+                onClose={() => {
+                  setAdjusting(false);
+                }}
+              />
+            ) : null}
           </div>
         )
       }
