@@ -122,6 +122,53 @@ test.describe('candidates', () => {
     );
     await expect(page.getByRole('button', { name: /Photo/ })).toBeFocused();
   });
+
+  test('adjust frames the photo in the browser and saves the cropped JPEG', async ({
+    page,
+    request,
+  }) => {
+    await applyScenario(request, 'not-started', { candidateSet: 'one' });
+    await adminSignIn(page);
+    await page.goto('/admin/candidates/new');
+    // A real 400 × 300 PNG drawn by the browser (the 1 × 1 fixture is too small to crop).
+    const dataUrl = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 300;
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.fillStyle = 'teal';
+        context.fillRect(0, 0, 400, 300);
+      }
+      return canvas.toDataURL('image/png');
+    });
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'wide.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(dataUrl.split(',')[1] ?? '', 'base64'),
+    });
+    await expect(page.getByText('400 × 300 px')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Adjust' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Adjust photo' });
+    await expect(dialog.getByRole('button', { name: 'Use this crop' })).toBeEnabled();
+    await dialog.getByRole('slider', { name: 'Zoom' }).fill('2');
+    const frame = dialog.getByRole('button', { name: 'Photo position' });
+    await frame.focus();
+    await page.keyboard.press('ArrowLeft');
+    await dialog.getByRole('button', { name: 'Use this crop' }).click();
+    await expect(dialog).toBeHidden();
+
+    // 300 px tall photo, 4:5 at zoom 2: a 120 × 150 crop, saved as a JPEG of that size.
+    await expect(page.getByText('wide.jpg')).toBeVisible();
+    await expect(page.getByText(/120 × 150 px/)).toBeVisible();
+
+    // Adjust again starts from the original photo and the last crop.
+    await page.getByRole('button', { name: 'Adjust' }).click();
+    await expect(dialog.getByRole('slider', { name: 'Zoom' })).toHaveValue('2');
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(page.getByText('wide.jpg')).toBeVisible();
+  });
 });
 
 test.describe('results export', () => {

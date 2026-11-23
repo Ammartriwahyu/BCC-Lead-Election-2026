@@ -10,13 +10,25 @@ import { isApiError } from '@/lib/api/errors';
 import type { Candidate, CandidateInput } from '@/lib/api/types';
 import '@/lib/api/zodConfig';
 
+import type { PhotoCrop } from './photoCrop';
+
 const errors = candidateFormCopy.form.errors;
 
-/** The photo field: a new file, the saved photo, or nothing. */
+/**
+ * The photo field: a new file, the saved photo, or nothing. An adjusted file keeps the photo as
+ * picked (`source`) and its crop, so Adjust starts from there again without losing quality.
+ */
 export type PhotoValue =
   | { kind: 'none' }
   | { kind: 'saved'; url: string }
-  | { kind: 'file'; file: File; url: string; width: number; height: number };
+  | {
+      kind: 'file';
+      file: File;
+      url: string;
+      width: number;
+      height: number;
+      source?: { file: File; crop: PhotoCrop };
+    };
 
 export interface CandidateFormValues {
   photo: PhotoValue;

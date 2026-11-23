@@ -30,6 +30,19 @@ export const candidateFormCopy = {
     photoSaved: 'Current photo', // NEW: file name of a photo that is already saved
     replace: 'Replace',
     remove: 'Remove',
+    adjust: 'Adjust', // NEW: opens the Adjust photo dialog (DEVIATIONS #88)
+    adjustDialog: {
+      // NEW (DEVIATIONS #88)
+      title: 'Adjust photo',
+      body: 'Drag the photo so the face sits in the frame. Members see exactly this part.',
+      frame: 'Photo position',
+      frameHint: 'Arrow keys move the photo, Shift moves it further, + and − zoom.',
+      zoom: 'Zoom',
+      reset: 'Reset',
+      apply: 'Use this crop',
+      cancel: 'Cancel',
+      failed: "We couldn't crop this photo. Try again, or pick another photo.",
+    },
     ballot: 'Ballot number',
     ballotHint: 'Order on the ballot. Each number can be used once.',
     ballotTaken: (n: string) => `${n} (taken)`, // NEW: disabled option

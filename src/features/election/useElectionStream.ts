@@ -8,7 +8,8 @@ import { queryKeys } from '@/lib/query/keys';
 /**
  * Follows the election state over /election/stream while `enabled` (a signed-in voter who has not
  * voted yet). Each event replaces the cached state. Returns true while the stream is open, so the
- * pages stop polling; when it drops they poll again and the state is fetched at once.
+ * pages stop polling; when it drops they poll again, and the state and the session are fetched at
+ * once.
  */
 export function useElectionStream(enabled: boolean): boolean {
   const queryClient = useQueryClient();
@@ -23,7 +24,12 @@ export function useElectionStream(enabled: boolean): boolean {
       stop = startElectionStream({
         onStreaming: (open) => {
           setStreaming(open);
-          if (!open) void queryClient.invalidateQueries({ queryKey: queryKeys.election });
+          if (!open) {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.election });
+            // The election state is public; the session check surfaces an expired session
+            // ("Your session ended") when that is why the stream ended.
+            void queryClient.invalidateQueries({ queryKey: queryKeys.voter.me });
+          }
         },
         onEvent: (election) => {
           queryClient.setQueryData(queryKeys.election, election);

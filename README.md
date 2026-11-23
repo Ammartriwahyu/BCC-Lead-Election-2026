@@ -8,7 +8,7 @@ E-voting website for the **BCC Chairperson Election 2026** (Basic Computing Comm
 
 The backend is built in a separate repo. Until it exists, the app runs on a **mock API** that lives inside the Next server, so every tab, booth device and the display share the same data.
 
-> Status: Phases 1–8 done. The frontend speaks the real backend API (doc "API Pilketum BCC") through a server-side BFF, including the committee Candidates pages, two-step sign-in and the results export. Going live: `docs/INTEGRATION.md`; open points: `docs/BACKEND_QUESTIONS.md`. QA results: `docs/QA_REPORT.md`.
+> Status: Phases 1–8 done. The frontend speaks the real backend API (doc "API Pilketum BCC") through a server-side BFF, including the committee Candidates pages, two-step sign-in and the results export. Going live: `docs/INTEGRATION.md`, server setup: `docs/DEPLOY.md`; open points: `docs/BACKEND_QUESTIONS.md`. QA results: `docs/QA_REPORT.md`.
 
 ## Requirements
 
@@ -124,7 +124,7 @@ Rules for contributors (and Claude Code) are in `CLAUDE.md`.
 
 ## Connecting the real backend
 
-Full runbook: `docs/INTEGRATION.md`. In short:
+Full runbook: `docs/INTEGRATION.md`; build, run and nginx on the server: `docs/DEPLOY.md`. In short:
 
 1. Build with `IMAGE_REMOTE_PATTERNS` set to the photo host; run with `API_BASE_URL` and `BFF_SECRET` of that environment.
 2. `pnpm contract:check https://pilketum.bccdev.id/staging` (test accounts in `.env.contract.local`) until every check passes.

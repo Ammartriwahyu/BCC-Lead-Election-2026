@@ -240,8 +240,10 @@ export async function handleBffRequest(request: Request, options: BffOptions): P
   if (spec.startsSession && upstream.ok) {
     return storeSession(request, upstream, spec.startsSession, options);
   }
-  if (upstream.status === 401 && cookieName) {
-    // Expired or revoked token: drop the cookie so the proxy sends the next page to sign-in.
+  // Expired or revoked token: drop the cookie so the proxy sends the next page to sign-in. Not for
+  // a stream: EventSource cannot see the 401, so the page would lose its session silently and the
+  // next reload would skip "Your session ended". The page's next API call gets the 401 instead.
+  if (upstream.status === 401 && cookieName && !('stream' in spec)) {
     return passThrough(upstream, new Headers({ 'Set-Cookie': clearCookie(request, cookieName) }));
   }
   return passThrough(upstream);

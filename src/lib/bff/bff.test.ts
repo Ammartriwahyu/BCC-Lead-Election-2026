@@ -112,6 +112,15 @@ describe('handleBffRequest', () => {
     expect(response.headers.get('Set-Cookie')).toMatch(/^voter_sid=; .*Max-Age=0/);
   });
 
+  it('keeps the cookie on a 401 from a stream (EventSource cannot act on it)', async () => {
+    const response = await handleBffRequest(
+      req('/election/stream', { headers: { cookie: 'voter_sid=old' } }),
+      options(() => Promise.resolve(json({ error: { code: 'UNAUTHORIZED' } }, 401))),
+    );
+    expect(response.status).toBe(401);
+    expect(response.headers.get('Set-Cookie')).toBeNull();
+  });
+
   it('signs out locally whatever the backend answers; committee sign-out maps to /auth/logout', async () => {
     const upstream = vi.fn(() => Promise.reject(new Error('down')));
     const response = await handleBffRequest(

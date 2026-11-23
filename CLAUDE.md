@@ -2,7 +2,7 @@
 
 E-voting frontend for the BCC Chairperson Election 2026: voter web (booth + mobile), admin panel, public `/display`. Backend lives in a separate repo (API doc "API Pilketum BCC", see `docs/API_CONTRACT.md`); this repo talks to it through a **server-side BFF**, and runs on a **server-side mock backend** that implements the same doc.
 
-Full plan: `docs/PLAN.md`. Design deviations: `docs/DEVIATIONS.md`. API contract: `docs/API_CONTRACT.md` (+ generated `docs/openapi.json`). Backend switch-over: `docs/INTEGRATION.md`, `docs/BACKEND_QUESTIONS.md`.
+Full plan: `docs/PLAN.md`. Design deviations: `docs/DEVIATIONS.md`. API contract: `docs/API_CONTRACT.md` (+ generated `docs/openapi.json`). Backend switch-over: `docs/INTEGRATION.md`, `docs/BACKEND_QUESTIONS.md`. Server setup: `docs/DEPLOY.md`.
 
 ## Source of truth
 
