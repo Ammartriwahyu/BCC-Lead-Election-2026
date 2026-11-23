@@ -24,7 +24,7 @@ export const candidateFormCopy = {
     photo: 'Photo',
     photoPrompt: 'Drag a photo here or',
     photoBrowse: 'browse',
-    photoHint: 'JPG or PNG, up to 2 MB. A 4:5 portrait works best.',
+    photoHint: 'JPG or PNG, up to 2 MB. A 3:4 portrait works best.', // Figma: 4:5 (DEVIATIONS #88)
     photoMeta: (size: string, width: number, height: number) => `${size} · ${width} × ${height} px`,
     photoMetaSize: (size: string) => size, // NEW: dimensions not known yet
     photoSaved: 'Current photo', // NEW: file name of a photo that is already saved
@@ -34,10 +34,16 @@ export const candidateFormCopy = {
     adjustDialog: {
       // NEW (DEVIATIONS #88)
       title: 'Adjust photo',
-      body: 'Drag the photo so the face sits in the frame. Members see exactly this part.',
+      body: 'Drag and zoom the photo until the face looks right in the previews.',
       frame: 'Photo position',
-      frameHint: 'Arrow keys move the photo, Shift moves it further, + and − zoom.',
+      frameHint: 'Arrow keys move the photo, Shift moves it further. Scroll, + and − zoom.',
       zoom: 'Zoom',
+      preview: 'Preview',
+      previews: {
+        cardLarge: 'Ballot card, large screens',
+        cardPhone: 'Ballot card, phones',
+        profile: 'Candidate profile',
+      },
       reset: 'Reset',
       apply: 'Use this crop',
       cancel: 'Cancel',

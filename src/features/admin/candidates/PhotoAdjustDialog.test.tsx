@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { renderWithProviders } from '@/test/render';
@@ -54,21 +54,48 @@ describe('PhotoAdjustDialog', () => {
     expect(screen.getByRole('dialog', { name: 'Adjust photo' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Use this crop' })).toBeDisabled();
     const image = loadPhoto();
-    // 2000 × 1000 photo, 240 px frame: the centred 800 × 1000 area, scale 0.3.
-    expect(offsetX(image)).toBe(-180);
+    // 2000 × 1000 photo, 240 px frame: the centred 750 × 1000 area, scale 0.32.
+    expect(offsetX(image)).toBe(-200);
 
     const frame = screen.getByRole('button', { name: 'Photo position' });
     frame.focus();
     await userEvent.keyboard('{ArrowRight}');
-    expect(offsetX(image)).toBe(-172);
+    expect(offsetX(image)).toBe(-192);
     await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}');
-    expect(offsetX(image)).toBe(-212);
+    expect(offsetX(image)).toBe(-232);
 
-    fireEvent.change(screen.getByRole('slider', { name: 'Zoom' }), { target: { value: '2' } });
-    expect(image.style.width).toBe('1200px');
+    const zoom = screen.getByRole('slider', { name: 'Zoom' });
+    fireEvent.change(zoom, { target: { value: '2' } });
+    expect(image.style.width).toBe('1280px');
 
     await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
-    expect(offsetX(image)).toBe(-180);
+    expect(offsetX(image)).toBe(-200);
+
+    // The mouse wheel zooms too (up = in).
+    fireEvent.wheel(frame, { deltaY: -100 });
+    expect(Number((zoom as HTMLInputElement).value)).toBeCloseTo(1.1);
+    fireEvent.wheel(frame, { deltaY: 100 });
+    expect(Number((zoom as HTMLInputElement).value)).toBeCloseTo(1);
+  });
+
+  it('previews the ballot card and the profile the way they will show the photo', () => {
+    renderDialog();
+    loadPhoto();
+    const preview = screen.getByRole('region', { name: 'Preview' });
+    for (const label of [
+      'Ballot card, large screens',
+      'Ballot card, phones',
+      'Candidate profile',
+    ]) {
+      expect(within(preview).getByText(label)).toBeInTheDocument();
+    }
+    // Large-screen card at 0.6: 228 × 180, filled by width (750 photo px), top-aligned.
+    const card = within(preview).getByText('Ballot card, large screens').previousElementSibling;
+    if (!(card instanceof HTMLElement)) throw new Error('no preview frame');
+    expect(card.style.width).toBe('228px');
+    expect(card.style.height).toBe('180px');
+    const image = card.querySelector('img');
+    expect(Number.parseFloat(image?.style.width ?? '')).toBeCloseTo(2000 * (228 / 750));
   });
 
   it('hands back the cropped file, the crop and the saved size', async () => {
@@ -79,13 +106,13 @@ describe('PhotoAdjustDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Use this crop' }));
     expect(exportMock).toHaveBeenCalledWith(
       'blob:photo',
-      { x: 600, y: 0, width: 800, height: 1000 },
+      { x: 625, y: 0, width: 750, height: 1000 },
       'portrait.png',
     );
     expect(onApply).toHaveBeenCalledWith({
       file: cropped,
       crop: { zoom: 1, centerX: 0.5, centerY: 0.5 },
-      size: { width: 800, height: 1000 },
+      size: { width: 750, height: 1000 },
     });
   });
 

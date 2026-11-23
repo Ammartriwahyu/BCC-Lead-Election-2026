@@ -113,16 +113,28 @@ export const CANDIDATE = {
   missionMax: 200,
   photoMaxBytes: 2 * 1024 * 1024,
   photoTypes: ['image/jpeg', 'image/png'],
-  /** Portrait 4:5 (width / height). */
-  photoAspect: 4 / 5,
+  /** Portrait 3:4 (width / height), the shape of the candidates' photos. */
+  photoAspect: 3 / 4,
   /** Adjust photo dialog (NEW, DEVIATIONS #88): frame width on screen, zoom range and steps. */
   photoFrameWidth: 240,
-  photoMaxZoom: 3,
+  photoMaxZoom: 4,
   photoZoomStep: 0.05,
+  /** One mouse wheel notch on the frame zooms this much. */
+  photoWheelZoomStep: 0.1,
+  /**
+   * Live previews in the Adjust dialog, at `scale` of the real size: the ballot card photo on large
+   * screens (CandidateCard md:h-300, card width at 1512) and phones (h-104 w-88), and the profile
+   * (CandidateProfileHero md:h-280 md:w-240). Photos fill these top-aligned (CandidateImage).
+   */
+  photoPreviews: {
+    cardLarge: { width: 380, height: 300, scale: 0.6 },
+    cardPhone: { width: 88, height: 104, scale: 1 },
+    profile: { width: 240, height: 280, scale: 0.5 },
+  },
   /** Arrow keys move the photo this far (Shift: the larger step), in frame pixels. */
   photoNudgePx: 8,
   photoNudgeLargePx: 40,
-  /** An adjusted photo is saved as a JPEG this wide at most (never upscaled), 4:5. */
+  /** An adjusted photo is saved as a JPEG this wide at most (never upscaled), 3:4. */
   photoOutputWidth: 800,
   photoJpegQuality: 0.9,
   /** Class years offered in the form: the election year and the six before it. */
