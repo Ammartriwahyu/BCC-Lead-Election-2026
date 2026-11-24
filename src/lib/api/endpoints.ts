@@ -16,6 +16,7 @@ import {
   type EventStreamHandle,
   type RequestOptions,
 } from './client';
+import { toPhotoSrc } from './photoUrl';
 import { API_ROUTES, pathFor, type RouteName } from './routes';
 import {
   adminMeDtoSchema,
@@ -113,7 +114,7 @@ export const toCandidate = (dto: CandidateDto): Candidate => ({
   name: dto.full_name,
   major: dto.study_program,
   classYear: dto.class_year,
-  photoUrl: dto.photo_url,
+  photoUrl: toPhotoSrc(dto.photo_url),
   vision: dto.vision,
   missions: dto.missions,
 });
@@ -124,7 +125,7 @@ const toTally = (dto: CandidateResultDto): Omit<CandidateTally, 'share'> => ({
   name: dto.full_name,
   major: dto.study_program,
   classYear: dto.class_year,
-  photoUrl: dto.photo_url,
+  photoUrl: toPhotoSrc(dto.photo_url),
   votes: dto.votes,
 });
 
@@ -154,7 +155,11 @@ export function toDisplayPayload(dto: DisplayPayloadDto): DisplayPayload {
         screen: 'OPENS_SOON',
         candidates: [...dto.candidates]
           .sort((a, b) => a.ballot_number - b.ballot_number)
-          .map((c) => ({ number: c.ballot_number, name: c.full_name, photoUrl: c.photo_url })),
+          .map((c) => ({
+            number: c.ballot_number,
+            name: c.full_name,
+            photoUrl: toPhotoSrc(c.photo_url),
+          })),
       };
     case 'voting_open':
       return { screen: 'VOTING_OPEN', turnout: toTurnout(dto.turnout) };

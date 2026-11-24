@@ -142,6 +142,20 @@ export const CANDIDATE = {
   classYearCount: 7,
 } as const;
 
+/**
+ * Candidate photos, served same-origin by the Next server (src/app/candidate-photos): it reads them
+ * from `API_BASE_URL` + `upstreamPath`, the address the BFF already reaches the backend on. The
+ * public `photo_url` host is not reachable from the production server itself (TLS hairpin).
+ */
+export const PHOTOS = {
+  routePrefix: '/candidate-photos',
+  upstreamPath: '/uploads/candidates',
+  /** Longest file name accepted (the backend uses 32 hex characters plus the extension). */
+  fileNameMax: 128,
+  /** Every upload gets a new file name, so a photo never changes (backend answer #8). */
+  cacheControl: 'public, max-age=31536000, immutable',
+} as const;
+
 /** OTP codes from authenticator apps. */
 export const OTP = {
   codeLength: 6,

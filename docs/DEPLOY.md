@@ -20,10 +20,10 @@ IMAGE_REMOTE_PATTERNS='https://pilketum.bccdev.id/**' pnpm build:standalone
 
 `pnpm build:standalone` always builds without the mock API. Build-time variables (baked into the build):
 
-| Variable                 | Value                           | Purpose                                                                |
-| ------------------------ | ------------------------------- | ---------------------------------------------------------------------- |
-| `IMAGE_REMOTE_PATTERNS`  | `https://pilketum.bccdev.id/**` | Hosts candidate photos may come from. Covers staging and production    |
-| `NEXT_PUBLIC_BOOTH_MODE` | `true` (default, leave it)      | Shared-device mode: idle sign-out after 90 s, auto sign-out after vote |
+| Variable                 | Value                           | Purpose                                                                                             |
+| ------------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `IMAGE_REMOTE_PATTERNS`  | `https://pilketum.bccdev.id/**` | Fallback for photo URLs of another shape. Photos are read from `API_BASE_URL` (`/candidate-photos`) |
+| `NEXT_PUBLIC_BOOTH_MODE` | `true` (default, leave it)      | Shared-device mode: idle sign-out after 90 s, auto sign-out after vote                              |
 
 Then put the static files next to the server (Next does not copy them):
 
