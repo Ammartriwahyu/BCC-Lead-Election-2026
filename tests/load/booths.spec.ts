@@ -10,7 +10,7 @@ import { adminSignIn, statValue } from '../e2e/admin-helpers';
 import { applyScenario, getMockState } from '../e2e/helpers';
 import { reviewButton, signIn, submitVoteButton } from '../e2e/voter-helpers';
 import { expect, test, type Page } from '../fixtures';
-import { pageMetrics } from './metrics';
+import { pageMetrics, trackRequests } from './metrics';
 
 const BOOTHS = 3;
 const REGISTERED = 139;
@@ -110,14 +110,19 @@ test('one booth serving many voters without a reload does not leak', async ({
   // Measured on the test's own page and nothing else: Chromium's counters cover the whole
   // renderer process, so a second page would add its own nodes and listeners.
   await page.setViewportSize(DESKTOP);
+  // Measure once the last voter's requests are done (see trackRequests): a booth has seconds
+  // between voters, a test only milliseconds.
+  const requests = trackRequests(page);
   await applyScenario(request, 'open');
   const emails = voters().slice(2, 2 + WARM_UP_VOTERS + MEASURED_VOTERS);
 
   for (const email of emails.slice(0, WARM_UP_VOTERS)) await boothVote(page, email, 1);
+  await requests.idle();
   const start = await pageMetrics(context, page);
   for (const [index, email] of emails.slice(WARM_UP_VOTERS).entries()) {
     await boothVote(page, email, (index % 3) + 1);
   }
+  await requests.idle();
   const end = await pageMetrics(context, page);
 
   test.info().annotations.push({

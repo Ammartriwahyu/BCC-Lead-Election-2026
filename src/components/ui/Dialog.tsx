@@ -18,6 +18,8 @@ export interface DialogProps {
   dismissible?: boolean;
   /** Replace the default card layout entirely (e.g. the Submitting card). */
   bare?: boolean;
+  /** NEW (DEVIATIONS #88): 720 wide instead of 520, for the Adjust photo dialog and its previews. */
+  wide?: boolean;
   className?: string;
 }
 
@@ -39,6 +41,7 @@ export function Dialog({
   actions,
   dismissible = true,
   bare = false,
+  wide = false,
   className,
 }: DialogProps) {
   const returnFocus = useReturnFocus(open);
@@ -60,7 +63,7 @@ export function Dialog({
           onInteractOutside={dismissible ? undefined : block}
           className={cx(
             'fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 animate-dialog-in overflow-y-auto rounded-xl bg-surface-card shadow-modal outline-none data-[state=closed]:animate-dialog-out',
-            bare ? 'max-w-max' : 'flex max-w-520 flex-col gap-20 p-32',
+            bare ? 'max-w-max' : cx('flex flex-col gap-20 p-32', wide ? 'max-w-720' : 'max-w-520'),
             className,
           )}
         >

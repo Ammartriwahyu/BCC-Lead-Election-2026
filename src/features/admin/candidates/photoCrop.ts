@@ -1,6 +1,6 @@
 /**
- * Pure maths for the Adjust photo dialog: which part of the picked photo the 4:5 frame shows.
- * A crop is a zoom (1 = the largest 4:5 area that fits) and the centre of that area, as a
+ * Pure maths for the Adjust photo dialog: which part of the picked photo the 3:4 frame shows.
+ * A crop is a zoom (1 = the largest 3:4 area that fits) and the centre of that area, as a
  * fraction of the photo's width and height. Every result stays inside the photo.
  */
 import { CANDIDATE } from '@/config/constants';
@@ -68,6 +68,26 @@ export function moveCrop(
 
 export const zoomCrop = (photo: Size, crop: PhotoCrop, zoom: number): PhotoCrop =>
   normalizeCrop(photo, { ...crop, zoom });
+
+/** Where the photo goes in a frame that shows `rect` of it: its scale and top-left offset. */
+export interface Placement {
+  scale: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * How a frame of another shape shows the saved crop: it fills the frame (object-cover), centred
+ * across and top-aligned like CandidateImage, so a wider frame drops the bottom of the photo.
+ */
+export function coverPlacement(rect: Rect, frame: Size): Placement {
+  const scale = Math.max(frame.width / rect.width, frame.height / rect.height);
+  return {
+    scale,
+    x: (frame.width - rect.width * scale) / 2 - rect.x * scale,
+    y: -rect.y * scale,
+  };
+}
 
 /** Size of the saved JPEG: at most photoOutputWidth wide, never larger than the crop itself. */
 export function outputSize(rect: Rect): Size {

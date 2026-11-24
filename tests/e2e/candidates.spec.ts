@@ -152,6 +152,9 @@ test.describe('candidates', () => {
     await page.getByRole('button', { name: 'Adjust' }).click();
     const dialog = page.getByRole('dialog', { name: 'Adjust photo' });
     await expect(dialog.getByRole('button', { name: 'Use this crop' })).toBeEnabled();
+    await expect(dialog.getByRole('region', { name: 'Preview' })).toContainText(
+      'Ballot card, large screens',
+    );
     await dialog.getByRole('slider', { name: 'Zoom' }).fill('2');
     const frame = dialog.getByRole('button', { name: 'Photo position' });
     await frame.focus();
@@ -159,9 +162,9 @@ test.describe('candidates', () => {
     await dialog.getByRole('button', { name: 'Use this crop' }).click();
     await expect(dialog).toBeHidden();
 
-    // 300 px tall photo, 4:5 at zoom 2: a 120 × 150 crop, saved as a JPEG of that size.
+    // 300 px tall photo, 3:4 at zoom 2: a 112.5 × 150 crop, saved as a 113 × 151 JPEG.
     await expect(page.getByText('wide.jpg')).toBeVisible();
-    await expect(page.getByText(/120 × 150 px/)).toBeVisible();
+    await expect(page.getByText(/113 × 151 px/)).toBeVisible();
 
     // Adjust again starts from the original photo and the last crop.
     await page.getByRole('button', { name: 'Adjust' }).click();

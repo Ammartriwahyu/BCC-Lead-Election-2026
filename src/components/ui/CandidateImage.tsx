@@ -11,7 +11,9 @@ interface CandidateImageProps {
 }
 
 /**
- * A candidate photo that fills its (relative) parent, resized by Next's image optimizer.
+ * A candidate photo that fills its (relative) parent, resized by Next's image optimizer. Top-aligned:
+ * a portrait in a wider frame (the ballot card on large screens) loses its bottom, never the head
+ * (DEVIATIONS #88; the Adjust photo previews use the same rule).
  *
  * Plain `<img>` with `getImageProps` instead of the `<Image>` component: on a booth the ballot is
  * shown to every voter without a reload, and each `<Image>` kept its element alive after the page
@@ -31,7 +33,7 @@ export function CandidateImage({ src, alt, sizes, className }: CandidateImagePro
       <img
         {...imgProps}
         alt={alt}
-        className={cx('absolute inset-0 size-full object-cover', className)}
+        className={cx('absolute inset-0 size-full object-cover object-top', className)}
       />
     </picture>
   );
