@@ -87,7 +87,7 @@ Full shapes: `docs/openapi.json`. Mapping notes:
 
 Lists: a response list the backend leaves out or sends as `null` is read as `[]` (seen on staging: `voting_opens_soon` without `candidates` while there are none).
 
-Candidate photos: `photo_url` is absolute (`https://pilketum.bccdev.id/uploads/candidates/<hex>.jpg`, staging under `/staging/uploads/…`) or `null`. Every upload gets a new file name and is served `immutable`, so `IMAGE_REMOTE_PATTERNS=https://pilketum.bccdev.id/**` covers both environments.
+Candidate photos: `photo_url` is absolute (`https://pilketum.bccdev.id/uploads/candidates/<hex>.jpg`, staging under `/staging/uploads/…`) or `null`. Every upload gets a new file name and is served `immutable`. The frontend shows them through its own route `/candidate-photos/<file>`, which reads `API_BASE_URL/uploads/candidates/<file>` (the backend must serve photos there too); `IMAGE_REMOTE_PATTERNS=https://pilketum.bccdev.id/**` only covers a `photo_url` of another shape.
 
 Results rows (`results[]`, `winners[]`, `results.candidates[]`) always have `id, ballot_number, full_name, study_program, class_year, photo_url, votes, share, rank`; the `winner_suspense` line-up has the `voting_opens_soon` shape (no votes).
 

@@ -66,17 +66,17 @@ Optional: `&candidates=one|six|long` and `&voters=1000`. Applying a scenario res
 
 Validated by `src/config/env.ts`.
 
-| Name                      | Default                  | Purpose                                                                                                                   |
-| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_MOCKING` | `disabled`               | `enabled` runs the in-repo mock API. Build-time: `pnpm build` always forces `disabled`                                    |
-| `NEXT_PUBLIC_BOOTH_MODE`  | `true`                   | Shared-device mode: idle timeout and auto sign-out                                                                        |
-| `API_BASE_URL`            | –                        | Runtime. Backend base URL without `/api` (`https://pilketum.bccdev.id`, staging `…/staging`); `/api/*` is forwarded there |
-| `BFF_SECRET`              | –                        | Runtime, server-only. `X-BFF-Secret` from the backend team (per environment), so rate limits see the voter's IP           |
-| `TRUSTED_PROXY_HOPS`      | `1`                      | Runtime. Proxies in front of the Next server that append to `X-Forwarded-For`                                             |
-| `IMAGE_REMOTE_PATTERNS`   | –                        | Build time. Hosts allowed for candidate photos: `https://pilketum.bccdev.id/**`                                           |
-| `SESSION_COOKIE_VOTER`    | `pilketum_voter_session` | Runtime. Name of the backend's voter session cookie (checked by `src/proxy.ts`)                                           |
-| `SESSION_COOKIE_ADMIN`    | `pilketum_admin_session` | Runtime. Name of the backend's committee session cookie                                                                   |
-| `NEXT_OUTPUT`             | –                        | `standalone` for self-host builds (`pnpm build:standalone`)                                                               |
+| Name                      | Default                  | Purpose                                                                                                                                  |
+| ------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_MOCKING` | `disabled`               | `enabled` runs the in-repo mock API. Build-time: `pnpm build` always forces `disabled`                                                   |
+| `NEXT_PUBLIC_BOOTH_MODE`  | `true`                   | Shared-device mode: idle timeout and auto sign-out                                                                                       |
+| `API_BASE_URL`            | –                        | Runtime. Backend base URL without `/api` (`https://pilketum.bccdev.id`, staging `…/staging`); `/api/*` is forwarded there                |
+| `BFF_SECRET`              | –                        | Runtime, server-only. `X-BFF-Secret` from the backend team (per environment), so rate limits see the voter's IP                          |
+| `TRUSTED_PROXY_HOPS`      | `1`                      | Runtime. Proxies in front of the Next server that append to `X-Forwarded-For`                                                            |
+| `IMAGE_REMOTE_PATTERNS`   | –                        | Build time. Fallback photo hosts (photos are normally read from `API_BASE_URL` via `/candidate-photos`): `https://pilketum.bccdev.id/**` |
+| `SESSION_COOKIE_VOTER`    | `pilketum_voter_session` | Runtime. Name of the backend's voter session cookie (checked by `src/proxy.ts`)                                                          |
+| `SESSION_COOKIE_ADMIN`    | `pilketum_admin_session` | Runtime. Name of the backend's committee session cookie                                                                                  |
+| `NEXT_OUTPUT`             | –                        | `standalone` for self-host builds (`pnpm build:standalone`)                                                                              |
 
 ## Scripts
 
