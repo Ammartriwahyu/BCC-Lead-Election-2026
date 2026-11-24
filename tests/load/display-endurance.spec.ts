@@ -6,7 +6,7 @@
  * event listeners do not grow.
  */
 import { expect, test, type Page } from '../fixtures';
-import { pageMetrics } from './metrics';
+import { lowest, pageMetrics, type PageMetrics } from './metrics';
 
 const HOURS = 4;
 const POLL_MS = 3_000;
@@ -14,6 +14,11 @@ const POLLS = (HOURS * 60 * 60 * 1000) / POLL_MS;
 /** The committee changes the screen every 100 polls (5 minutes). */
 const POLLS_PER_SCREEN = 100;
 const SCREENS = ['voting_open', 'voting_closed', 'winner_suspense', 'final_results', 'most_votes'];
+const CYCLE = POLLS_PER_SCREEN * SCREENS.length;
+/** Polls into a cycle at which it is sampled: halfway through its first screen (voting_open). */
+const SAMPLE_AT = POLLS_PER_SCREEN / 2;
+/** Samples compared at each end of the run (see lowest). */
+const SAMPLE_WINDOW = 3;
 const REGISTERED = 139;
 const MAX_HEAP_GROWTH_MB = 5;
 const MAX_NODE_GROWTH = 200;
@@ -61,8 +66,9 @@ function payload(n: number) {
   }
 }
 
-async function advancePolls(page: Page, count: number) {
-  for (let i = 0; i < count; i += 1) {
+/** Runs the clock poll by poll until the page has been served `target` payloads. */
+async function advanceTo(page: Page, served: () => number, target: number) {
+  while (served() < target) {
     await page.clock.runFor(POLL_MS);
     // Let the fetch answer settle so the next poll is scheduled.
     await page.waitForTimeout(5);
@@ -90,14 +96,20 @@ test(`runs ${String(HOURS)} hours (simulated) without a reload or a leak`, async
     (window as unknown as { __loadedOnce: boolean }).__loadedOnce = true;
   });
 
-  // Warm up for one full screen cycle before the first measurement.
-  await advancePolls(page, POLLS_PER_SCREEN * SCREENS.length);
-  const start = await pageMetrics(context, page);
+  // A sample halfway through the first screen of every cycle, after a warm-up cycle: always the
+  // same screen, long after its cross-fade. Run until the last sample is past the 4 hours.
+  const samples: PageMetrics[] = [];
+  for (let cycle = 1; polls < POLLS; cycle += 1) {
+    await advanceTo(page, () => polls, cycle * CYCLE + SAMPLE_AT + 1);
+    await expect(page.locator('[data-screen]')).toHaveAttribute('data-screen', 'VOTING_OPEN');
+    await expect(page.locator('[inert]')).toHaveCount(0);
+    samples.push(await pageMetrics(context, page));
+  }
+  // The first cycles against the last ones (see lowest): a leak grows with every poll.
+  const start = lowest(samples.slice(0, SAMPLE_WINDOW));
+  const end = lowest(samples.slice(-SAMPLE_WINDOW));
 
-  await advancePolls(page, POLLS - POLLS_PER_SCREEN * SCREENS.length);
-  const end = await pageMetrics(context, page);
-
-  expect(polls).toBeGreaterThanOrEqual(POLLS * 0.95);
+  expect(polls).toBeGreaterThanOrEqual(POLLS);
   // data-screen uses the app's names for the screens.
   const domain: Record<string, string> = {
     voting_open: 'VOTING_OPEN',

@@ -10,7 +10,7 @@ import { adminSignIn, statValue } from '../e2e/admin-helpers';
 import { applyScenario, getMockState } from '../e2e/helpers';
 import { reviewButton, signIn, submitVoteButton } from '../e2e/voter-helpers';
 import { expect, test, type Page } from '../fixtures';
-import { pageMetrics, trackRequests } from './metrics';
+import { detachedTrees, lowest, pageMetrics, trackRequests, type PageMetrics } from './metrics';
 
 const BOOTHS = 3;
 const REGISTERED = 139;
@@ -19,6 +19,8 @@ const DESKTOP = { width: 1512, height: 982 };
 /** Single-booth leak check: warm up, then serve this many more voters. */
 const WARM_UP_VOTERS = 3;
 const MEASURED_VOTERS = 20;
+/** Samples compared at each end of the run (see lowest). */
+const SAMPLE_WINDOW = 5;
 const MAX_HEAP_GROWTH_MB = 2;
 const MAX_NODE_GROWTH = 50;
 const MAX_LISTENER_GROWTH = 10;
@@ -110,26 +112,40 @@ test('one booth serving many voters without a reload does not leak', async ({
   // Measured on the test's own page and nothing else: Chromium's counters cover the whole
   // renderer process, so a second page would add its own nodes and listeners.
   await page.setViewportSize(DESKTOP);
-  // Measure once the last voter's requests are done (see trackRequests): a booth has seconds
-  // between voters, a test only milliseconds.
+  // Measure once each voter's requests are done (see trackRequests): a booth has seconds between
+  // voters, a test only milliseconds.
   const requests = trackRequests(page);
   await applyScenario(request, 'open');
   const emails = voters().slice(2, 2 + WARM_UP_VOTERS + MEASURED_VOTERS);
 
   for (const email of emails.slice(0, WARM_UP_VOTERS)) await boothVote(page, email, 1);
-  await requests.idle();
-  const start = await pageMetrics(context, page);
+  // A sample after the warm-up and after every voter, all on the sign-in page.
+  const samples: PageMetrics[] = [];
+  const sample = async () => {
+    await requests.idle();
+    samples.push(await pageMetrics(context, page));
+  };
+  await sample();
   for (const [index, email] of emails.slice(WARM_UP_VOTERS).entries()) {
     await boothVote(page, email, (index % 3) + 1);
+    await sample();
   }
-  await requests.idle();
-  const end = await pageMetrics(context, page);
+  // First voters against last voters (see lowest): a leak grows with every voter.
+  const start = lowest(samples.slice(0, SAMPLE_WINDOW));
+  const end = lowest(samples.slice(-SAMPLE_WINDOW));
+  const nodeGrowth = end.nodes - start.nodes;
+  const nodesPerVoter = samples.map((s) => s.nodes).join(' ');
 
   test.info().annotations.push({
     type: 'booth memory',
-    description: `${String(MEASURED_VOTERS)} voters; heap ${start.heapMb.toFixed(1)} → ${end.heapMb.toFixed(1)} MB, nodes ${String(start.nodes)} → ${String(end.nodes)}, listeners ${String(start.listeners)} → ${String(end.listeners)}`,
+    description: `${String(MEASURED_VOTERS)} voters; heap ${start.heapMb.toFixed(1)} → ${end.heapMb.toFixed(1)} MB, nodes ${String(start.nodes)} → ${String(end.nodes)} (${nodesPerVoter}), listeners ${String(start.listeners)} → ${String(end.listeners)}`,
   });
   expect(end.heapMb - start.heapMb, 'heap growth (MB)').toBeLessThan(MAX_HEAP_GROWTH_MB);
-  expect(end.nodes - start.nodes, 'DOM node growth').toBeLessThan(MAX_NODE_GROWTH);
+  const detached =
+    nodeGrowth >= MAX_NODE_GROWTH ? await detachedTrees(context, page) : 'not checked';
+  expect(
+    nodeGrowth,
+    `DOM node growth (nodes after each voter: ${nodesPerVoter}; detached trees: ${detached})`,
+  ).toBeLessThan(MAX_NODE_GROWTH);
   expect(end.listeners - start.listeners, 'listener growth').toBeLessThan(MAX_LISTENER_GROWTH);
 });
